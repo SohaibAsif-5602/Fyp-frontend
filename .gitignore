@@ -1,2 +1,39 @@
-node_modules
-android/app/build/outputs/apk/debug/app-debug.apk
+# Ignore node_modules directory
+node_modules/
+
+# Ignore build outputs
+android/app/build/
+ios/build/
+build/
+dist/
+
+# Ignore APK files
+*.apk
+
+# Ignore other large files
+*.log
+*.tmp
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Windows system files
+Thumbs.db
+
+# Ignore yarn and npm lock files (if you use a different package manager)
+# yarn.lock
+# package-lock.json
+
+# Ignore any additional local environment files
+.env.local
+.env.*.local
+
+
