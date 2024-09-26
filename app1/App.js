@@ -1,0 +1,74 @@
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Import your screens
+import LoginScreen from './pages/loginscreen';
+import SignupScreen from "./pages/SignupScreen";
+import Analytics from "./pages/analytics";
+import Profile from "./pages/profile";
+import Ponds from "./pages/ponds";
+import Setting from "./pages/setting";
+import AlertHistory from "./pages/alerthistory";
+import Subscription from "./pages/subscription";
+import UserDetails from "./pages/UserDetails";
+import AlertSettingsPage from './pages/alertsettingspage';
+import PondSetting from './pages/pondsetting';
+import SplashScreen from './pages/splashscreen';
+import AddPond from './pages/AddPond';
+const Stack = createStackNavigator();
+
+export default function App() {
+  const [isNewUser, setIsNewUser] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check AsyncStorage for user registration status
+  useEffect(() => {
+    const checkUserRegistration = async () => {
+      try {
+        const userRegistered = await AsyncStorage.getItem('userRegistered');
+        if (userRegistered) {
+          setIsNewUser(false);  // Skip splash screen if user is already registered
+        }
+      } catch (error) {
+        console.error('Error reading user registration status:', error);
+      } finally {
+        setIsLoading(false);  // Stop loading regardless of result
+      }
+    };
+
+    checkUserRegistration();
+  }, []);
+
+  if (isLoading) {
+    // You can show a loading spinner here while checking registration status
+    return null;
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}  // Show SplashScreen for new users, Login for returning users
+        screenOptions={{
+          headerShown: false,  // Customize based on your needs
+        }}
+      >
+        {/* Screens */}
+        <Stack.Screen name="SplashScreen" component={SplashScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="AlertHistory" component={AlertHistory} />
+        <Stack.Screen name="Subscription" component={Subscription} />
+        <Stack.Screen name="PondSetting" component={PondSetting} />
+        <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
+        <Stack.Screen name="UserDetails" component={UserDetails} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="Ponds" component={Ponds} />
+        <Stack.Screen name="Setting" component={Setting} />
+        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="Analytics" component={Analytics} />
+        <Stack.Screen name="AddPond" component={AddPond} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
