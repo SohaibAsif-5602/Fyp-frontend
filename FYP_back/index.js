@@ -55,9 +55,7 @@ app.post('/login', (req, res) => {
 
         const user = result[0];
 
-        if (!user.is_verified) {
-            return res.status(400).json({ msg: "Please verify your email before logging in." });
-        }
+        
 
         bcrypt.compare(password, user.password, (err, isMatch) => {
             if (err) return res.status(500).json("Error comparing password");

@@ -13,7 +13,6 @@ const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username,setusername]=useState('');
-  const [msg, setMsg] = useState('');
   const navigation = useNavigation();
 
   const handleSubmit = async () => {
@@ -24,7 +23,7 @@ const SignupScreen = () => {
       }
     
       try {
-        const response = await axios.post('http://192.168.100.15:8080/signup', {
+        const response = await axios.post('http://10.120.172.104:8080/signup', {
           email: email,
           password: password,
           username: username // Assuming username is static here; if it's dynamic, add a state for it

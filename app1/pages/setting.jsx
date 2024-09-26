@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Switch, StyleSheet, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import Footer from '../components/footer';
 const Logo = () => (
     <Image
       source={require('../assets/high-temperature.png')}
@@ -105,6 +106,7 @@ export default function Setting() {
           </View>
         </View>
       </Modal>
+      <Footer></Footer>
     </View>
   );
 }
@@ -112,6 +114,7 @@ export default function Setting() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    height:'100%',
     flex: 1,
     backgroundColor: '#fff',
   },

@@ -6,10 +6,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Import your screens
 import LoginScreen from './pages/loginscreen';
 import SignupScreen from "./pages/SignupScreen";
-import Analytics from "./pages/analytics";
-import Profile from "./pages/profile";
-import Ponds from "./pages/ponds";
-import Setting from "./pages/setting";
 import AlertHistory from "./pages/alerthistory";
 import Subscription from "./pages/subscription";
 import UserDetails from "./pages/UserDetails";
@@ -17,6 +13,7 @@ import AlertSettingsPage from './pages/alertsettingspage';
 import PondSetting from './pages/pondsetting';
 import SplashScreen from './pages/splashscreen';
 import AddPond from './pages/AddPond';
+import MainTabs from './pages/Maintabs';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -49,12 +46,14 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}  // Show SplashScreen for new users, Login for returning users
+        // initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}  // Show SplashScreen for new users, Login for returning users
+        initialRouteName='MainTabs'
         screenOptions={{
           headerShown: false,  // Customize based on your needs
         }}
       >
         {/* Screens */}
+        <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="AlertHistory" component={AlertHistory} />
@@ -63,10 +62,7 @@ export default function App() {
         <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
         <Stack.Screen name="UserDetails" component={UserDetails} />
         <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="Ponds" component={Ponds} />
-        <Stack.Screen name="Setting" component={Setting} />
-        <Stack.Screen name="Profile" component={Profile} />
-        <Stack.Screen name="Analytics" component={Analytics} />
+   
         <Stack.Screen name="AddPond" component={AddPond} />
       </Stack.Navigator>
     </NavigationContainer>

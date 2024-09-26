@@ -13,16 +13,15 @@ const LoginScreen = () => {
   const navigation = useNavigation();
 
   const Login = async () => {
+    console.log("clicked")
     try {
-      const response = await axios.post('http://192.168.100.15:8080/login', {
+      const response = await axios.post('http://10.120.172.104:8080/login', {
         email,
         password,
       });
 
       if (response.status === 200) {
-        // Store the JWT token in AsyncStorage
         await AsyncStorage.setItem('token', response.data.token);
-
         Alert.alert("Success", "Login successful");
         navigation.navigate('Ponds');  // Navigate to the Ponds page
       }

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import Footer from '../components/footer';
 
 const PondList = () => {
   const navigation = useNavigation();
@@ -52,7 +53,7 @@ const PondList = () => {
   ];
 
   const handlePondClick = (pond) => {
-    Alert.alert('Pond Details', `You clicked on the pond in ${pond.city}.`);
+   navigation.navigate('Analytics')
   };
 
   return (
