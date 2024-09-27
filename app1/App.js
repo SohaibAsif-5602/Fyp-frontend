@@ -12,7 +12,6 @@ import UserDetails from "./pages/UserDetails";
 import AlertSettingsPage from './pages/alertsettingspage';
 import PondSetting from './pages/pondsetting';
 import SplashScreen from './pages/splashscreen';
-import AddPond from './pages/AddPond';
 import MainTabs from './pages/Maintabs';
 import FishGuidePage from './pages/fishguide';
 const Stack = createStackNavigator();
@@ -58,7 +57,6 @@ export default function App() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AlertHistory" component={AlertHistory} />
         <Stack.Screen name="Subscription" component={Subscription} />
         <Stack.Screen name="PondSetting" component={PondSetting} />
         <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
@@ -66,6 +64,7 @@ export default function App() {
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name = "FishGuidePage" component={FishGuidePage} />
         <Stack.Screen name="AddPond" component={AddPond} />
+
       </Stack.Navigator>
     </NavigationContainer>
     </DarkModeProvider>

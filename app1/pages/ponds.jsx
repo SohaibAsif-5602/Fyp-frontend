@@ -1,9 +1,15 @@
+
 // PondList.js
 import React, { useEffect, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { DarkModeContext } from '../contexts/DarkModeContext';
+
+
+import { FontAwesome5 } from '@expo/vector-icons';
+
+
 
 const PondList = () => {
   const navigation = useNavigation();
@@ -36,6 +42,7 @@ const PondList = () => {
       fish: 'Catla',
       health: '86%',
       image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
+      warning: true,
     },
     {
       id: 2,
@@ -43,6 +50,7 @@ const PondList = () => {
       fish: 'Rohu',
       health: '72%',
       image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
+      warning: true,
     },
     {
       id: 3,
@@ -59,6 +67,7 @@ const PondList = () => {
   };
 
   return (
+
     <View style={[styles.wrapper, isDarkMode && styles.darkWrapper]}>
       <View style={[styles.header, isDarkMode && styles.darkHeader]}>
         <Text style={[styles.headerTitle, isDarkMode && styles.darkHeaderTitle]}>
@@ -86,6 +95,25 @@ const PondList = () => {
               )}
             </View>
           </TouchableOpacity>
+
+    <View style={styles.wrapper}>
+      <ScrollView contentContainerStyle={styles.pondList}>
+        {ponds.map((pond) => (
+          <View key={pond.id} style={styles.pondCard}>
+            
+            <TouchableOpacity style={styles.pondContent} onPress={() => handlePondClick(pond)}>
+             <View style={styles.imgcontainer}><Image source={{ uri: pond.image }} style={styles.pondImage} /></View>
+              <View style={styles.pondDetails}>
+                <Text style={styles.city}>{pond.city}</Text>
+                <Text style={styles.fish}>{pond.fish}</Text>
+                <Text style={styles.health}>Health: {pond.health}</Text>
+                {pond.warning && <Text style={styles.warning}>⚠️ Health Warning</Text>}
+              </View>
+              
+            </TouchableOpacity>
+            <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
+          </View>
+
         ))}
       </ScrollView>
 
@@ -104,6 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0f4f8',
   },
+
   darkWrapper: {
     backgroundColor: '#000',
   },
@@ -125,14 +154,20 @@ const styles = StyleSheet.create({
   },
   darkHeaderTitle: {
     color: '#fff',
+
+  imgcontainer: {
+    height: 'auto',
+    width: 100, // Matches the image width
+
   },
   pondList: {
     alignItems: 'center',
     paddingBottom: 80,
-    marginTop: 20, // Adjusted margin for spacing
+    marginTop: 20,
   },
   pondCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 3,
@@ -142,7 +177,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: '90%',
     overflow: 'hidden',
+    padding: 10, // Added padding for inner spacing
   },
+
   darkPondCard: {
     backgroundColor: '#333',
   },
@@ -152,12 +189,29 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderBottomLeftRadius: 12,
     resizeMode: 'cover',
+
+  browseIcon: {
+    marginLeft: 10,
+    padding: 10, // Add padding for separation
+    alignSelf: 'center',
+  },
+  pondContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   pondDetails: {
     flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
+    paddingVertical: 10, // Adjusted padding for spacing
+    paddingHorizontal: 10,
     justifyContent: 'center',
+    marginRight: 10,
+  },
+  pondImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    resizeMode: 'cover',
   },
   city: {
     fontSize: 18,
@@ -215,5 +269,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+
 
 export default PondList;
