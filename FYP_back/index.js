@@ -15,8 +15,8 @@ const saltrounds = 10;
 
 const db = sql.createConnection({
     host: 'localhost',
-    database: 'FYPDATABASE',
-    password: 'Sohaib210886sql',
+    database: 'taha',
+    password: '2003',
     user: 'root'
 });
 

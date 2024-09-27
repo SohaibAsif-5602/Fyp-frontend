@@ -12,6 +12,7 @@ import background from '../assets/water1.jpeg'
 const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [msg, setMsg] = useState(''); // Add this line
   const [username,setusername]=useState('');
   const navigation = useNavigation();
 
@@ -23,7 +24,7 @@ const SignupScreen = () => {
       }
     
       try {
-        const response = await axios.post('http://10.120.172.104:8080/signup', {
+        const response = await axios.post('http://192.168.10.47:8080/signup', {
           email: email,
           password: password,
           username: username // Assuming username is static here; if it's dynamic, add a state for it

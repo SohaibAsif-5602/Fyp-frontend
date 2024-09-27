@@ -7,9 +7,16 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Ponds from '../pages/ponds';
 import ProfileScreen from '../pages/profile';
 import Setting from '../pages/setting';
-import Analytics from '../pages/analytics';
+
+
+import Analytics from "../pages/analytics";
+import Subscription from "../pages/subscription";
+import UserDetails from "../pages/UserDetails";
+
+
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
+
 
 
 
@@ -77,12 +84,24 @@ function MainTabs() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="Settings" component={Setting} />
       
+      
       <Tab.Screen
         name="Analytics"
         component={Analytics}
         options={{ tabBarButton: () => null }}
       />
       <Tab.Screen
+
+        name="Subscription"
+        component={Subscription}
+        options={{ tabBarButton: () => null }}
+        />
+      <Tab.Screen
+        name="UserDetails"
+        component={UserDetails}
+        options={{ tabBarButton: () => null }}
+        />
+
         name="AddPond"
         component={AddPond}
         options={{ tabBarButton: () => null }}
@@ -92,6 +111,7 @@ function MainTabs() {
         component={AlertHistory}
         options={{ tabBarButton: () => null }}
       />
+
     </Tab.Navigator>
   );
 }

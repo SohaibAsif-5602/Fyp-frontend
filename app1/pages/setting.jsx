@@ -1,30 +1,34 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, Switch, StyleSheet, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Footer from '../components/footer';
-const Logo = () => (
-    <Image
-      source={require('../assets/high-temperature.png')}
-      style={styles.logo}
-      resizeMode="contain"
-    />
-  );
+import { DarkModeContext } from '../contexts/DarkModeContext';
+import FishGuidePage from './fishguide';
 
-export default function Setting() {
+const Logo = () => (
+  <Image
+    source={require('../assets/fish_logo.png')}
+    style={styles.logo}
+    resizeMode="contain"
+  />
+);
+
+const Setting = () => {
   const navigation = useNavigation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, setIsDarkMode } = useContext(DarkModeContext);
   const [areAlertsEnabled, setAreAlertsEnabled] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const toggleDarkMode = () => setIsDarkMode(previousState => !previousState);
-  const toggleAlerts = () => setAreAlertsEnabled(previousState => !previousState);
-
+  const toggleDarkMode = () => setIsDarkMode((prevState) => !prevState);
   const toggleAutoAction = () => {
-    setIsModalVisible(true);  // Show modal when the switch is toggled
+    setIsModalVisible(true); // Show modal when the switch is toggled
   };
 
-  const view_alert_settings_page = () => {
+  const viewAlertSettingsPage = () => {
     navigation.navigate('AlertSettingsPage');
+  };
+
+  const view_fish_guide = () => {
+    navigation.navigate('FishGuidePage');
   };
 
   const handleYes = () => {
@@ -39,48 +43,36 @@ export default function Setting() {
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <Text style={[styles.headertext, isDarkMode && styles.darkText]}>Settings</Text>
+      <Text style={[styles.headertext, isDarkMode && styles.darkHeadertext, isDarkMode && styles.darkText]}>Settings</Text>
 
       <View style={styles.option}>
         <Text style={[styles.text, isDarkMode && styles.darkText]}>Dark Mode</Text>
-        <Switch
-          value={isDarkMode}
-          onValueChange={toggleDarkMode}
-        />
-      </View>
-
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={view_alert_settings_page}>
-            <Text style={styles.text}>Turn off Alerts</Text>
-          </TouchableOpacity>
+        <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
       </View>
 
       <View style={styles.option}>
         <Text style={[styles.text, isDarkMode && styles.darkText]}>Turn off auto-action</Text>
-        <Switch
-          value={areAlertsEnabled}
-          onValueChange={toggleAutoAction}
-        />
+        <Switch value={areAlertsEnabled} onValueChange={toggleAutoAction} />
+      </View>
+
+      <View style={styles.option}>
+        <TouchableOpacity style={styles.button} onPress={view_fish_guide}>
+          <Text style={[styles.text, isDarkMode && styles.darkText]}>Fish Guide</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.option}>
         <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-            <Text style={styles.text}>Fish Guide</Text>
-          </TouchableOpacity>
+          <Text style={[styles.text, isDarkMode && styles.darkText]}>Help Center</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.option}>
         <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-            <Text style={styles.text}>Help Center</Text>
-          </TouchableOpacity>
+          <Text style={[styles.text, isDarkMode && styles.darkText]}>Learn More about Machiro</Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-            <Text style={styles.text}>Learn More about Machiro</Text>
-          </TouchableOpacity>
-      </View>
-      
       <View style={styles.logoContainer}>
         <Logo />
       </View>
@@ -93,8 +85,10 @@ export default function Setting() {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Are you sure you want to turn off automatic corrective actions from all your ponds? You can still choose to take action on an alert.</Text>
+          <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+            <Text style={[styles.modalText, isDarkMode && styles.darkText]}>
+              Are you sure you want to turn off automatic corrective actions from all your ponds? You can still choose to take action on an alert.
+            </Text>
             <View style={styles.modalButtons}>
               <Pressable style={styles.modalButton} onPress={handleNo}>
                 <Text style={styles.buttonText}>No</Text>
@@ -106,31 +100,34 @@ export default function Setting() {
           </View>
         </View>
       </Modal>
-      <Footer></Footer>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height:'100%',
+    height: '100%',
     flex: 1,
     backgroundColor: '#fff',
+    justifyContent: 'center',
   },
   darkContainer: {
-    backgroundColor: '#333',
+    backgroundColor: '#000',
   },
   headertext: {
-    paddingVertical: 20,
-    backgroundColor: 'lightblue',
+    paddingVertical: 17,
+    backgroundColor: '#00bcd4',
     textAlign: 'center',
     fontSize: 30,
     fontWeight: 'bold',
-    padding: 10,
-    color: '#000',
+    color: 'white',
+  },
+  darkHeadertext: {
+    backgroundColor: '#000',
   },
   text: {
+    paddingTop: 30,
     fontSize: 20,
     padding: 10,
     color: '#000',
@@ -165,6 +162,9 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
   },
+  darkModalContent: {
+    backgroundColor: '#333',
+  },
   modalText: {
     fontWeight: 'bold',
     fontSize: 20,
@@ -184,8 +184,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
   },
+  button: {
+    // Add any button-specific styles here if needed
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
   },
 });
+
+export default Setting;

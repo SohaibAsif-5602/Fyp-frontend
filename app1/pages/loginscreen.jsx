@@ -15,7 +15,7 @@ const LoginScreen = () => {
   const Login = async () => {
     console.log("clicked")
     try {
-      const response = await axios.post('http://10.120.172.104:8080/login', {
+      const response = await axios.post('http://192.168.10.47:8080/login', {
         email,
         password,
       });
