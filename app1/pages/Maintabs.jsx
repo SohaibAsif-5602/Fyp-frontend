@@ -6,6 +6,8 @@ import ProfileScreen from '../pages/profile';
 import Setting from '../pages/setting';
 import Icon from 'react-native-vector-icons/Ionicons'; // Import icon library
 import Analytics from "../pages/analytics";
+import Subscription from "../pages/subscription";
+import UserDetails from "../pages/UserDetails";
 
 const Tab = createBottomTabNavigator();
 
@@ -36,11 +38,22 @@ function MainTabs() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="Setting" component={Setting} />
       
+      
       <Tab.Screen
         name="Analytics"
         component={Analytics}
         options={{ tabBarButton: () => null }}
       />
+      <Tab.Screen
+        name="Subscription"
+        component={Subscription}
+        options={{ tabBarButton: () => null }}
+        />
+      <Tab.Screen
+        name="UserDetails"
+        component={UserDetails}
+        options={{ tabBarButton: () => null }}
+        />
     </Tab.Navigator>
   );
 }

@@ -1,57 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; // Import navigation hook
-import Entypo from '@expo/vector-icons/Entypo';
-import Header from '../components/Header';
-import Footer from '../components/footer';
+import { DarkModeContext } from '../contexts/DarkModeContext';
 
 export default function Profile() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const { isDarkMode } = useContext(DarkModeContext);
   const navigation = useNavigation(); // Use the navigation hook
   const change_plan = () => {
     navigation.navigate('Subscription');
   };
   return (
-    <View style={styles.container}>
-      <Header data={"Profile"}/>
-      <View style={styles.header}>
-        <Text style={styles.title}>User Details</Text>
-        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
-          <Entypo name="menu" size={34} color="black" />
-        </TouchableOpacity>
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <View style={[styles.header, isDarkMode && styles.darkHeader]}>
+        <Text style={[styles.title, isDarkMode && styles.darkHeaderText]}>User Details</Text>
       </View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={menuVisible}
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <TouchableOpacity style={styles.overlay} onPress={() => setMenuVisible(false)} />
-        <View style={styles.menu}>
-        <TouchableOpacity
-  style={styles.menuItem}
-  onPress={() => {
-    setMenuVisible(false); // Close the menu
-    navigation.navigate('UserDetails'); // Make sure this matches the route name in the Stack.Navigator
-  }}
->
-  <Text style={styles.menuText}>User Details</Text>
-</TouchableOpacity>
-
-          
-          <TouchableOpacity style={styles.menuItem} onPress={change_plan}>
-            <Text style={styles.menuText}>Change Plan</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem} onPress={() => {/* Handle Logout */}}>
-            <Text style={styles.menuText}>Logout</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.menuItem, styles.deleteButton]} onPress={() => {/* Handle Delete Account */}}>
-            <Text style={styles.menuText}>Delete Account</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -62,24 +25,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  darkContainer: {
+    backgroundColor: '#000',
+  },
+  darkHeader: {
+    backgroundColor: '#000',
+  },
+  darkHeaderText: {
+    color: '#fff',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkMenu: {
+    backgroundColor: '#333',
+  },
   header: {
-    backgroundColor: '#00BFFF', // Blue background
-    paddingVertical: 5,
+    backgroundColor: '#00bcd4',
+    paddingVertical: 20,
     paddingHorizontal: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 30,
   },
   menuButton: {
     paddingRight: 10, // Push menu icon to the right
     marginTop: 55,
   },
   title: {
-    fontWeight: 'bold',
-    marginTop: 50,
-    marginLeft: 110,
     fontSize: 30,
     color: '#fff', // White title text
+    fontWeight: 'bold',
   },
   profileContainer: {
     justifyContent: 'center',

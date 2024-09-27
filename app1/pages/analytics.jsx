@@ -302,7 +302,6 @@ export default function Analytics() {
       )}
       
     </ScrollView>
-    <Footer style={styles.footerStyle} />
     </View>
   );
 }
