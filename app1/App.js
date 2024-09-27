@@ -12,7 +12,6 @@ import UserDetails from "./pages/UserDetails";
 import AlertSettingsPage from './pages/alertsettingspage';
 import PondSetting from './pages/pondsetting';
 import SplashScreen from './pages/splashscreen';
-import AddPond from './pages/AddPond';
 import MainTabs from './pages/Maintabs';
 const Stack = createStackNavigator();
 
@@ -56,14 +55,12 @@ export default function App() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AlertHistory" component={AlertHistory} />
         <Stack.Screen name="Subscription" component={Subscription} />
         <Stack.Screen name="PondSetting" component={PondSetting} />
         <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
         <Stack.Screen name="UserDetails" component={UserDetails} />
         <Stack.Screen name="Signup" component={SignupScreen} />
    
-        <Stack.Screen name="AddPond" component={AddPond} />
       </Stack.Navigator>
     </NavigationContainer>
   );

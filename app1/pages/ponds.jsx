@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Footer from '../components/footer';
 
 const PondList = () => {
@@ -34,6 +35,7 @@ const PondList = () => {
       fish: 'Catla',
       health: '86%',
       image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
+      warning: true,
     },
     {
       id: 2,
@@ -41,6 +43,7 @@ const PondList = () => {
       fish: 'Rohu',
       health: '72%',
       image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
+      warning: true,
     },
     {
       id: 3,
@@ -53,25 +56,27 @@ const PondList = () => {
   ];
 
   const handlePondClick = (pond) => {
-   navigation.navigate('Analytics')
+    navigation.navigate('Analytics');
   };
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Pond Health Overview</Text>
-      </View>
       <ScrollView contentContainerStyle={styles.pondList}>
         {ponds.map((pond) => (
-          <TouchableOpacity key={pond.id} style={styles.pondCard} onPress={() => handlePondClick(pond)}>
-            <Image source={{ uri: pond.image }} style={styles.pondImage} />
-            <View style={styles.pondDetails}>
-              <Text style={styles.city}>{pond.city}</Text>
-              <Text style={styles.fish}>{pond.fish}</Text>
-              <Text style={styles.health}>Health: {pond.health}</Text>
-              {pond.warning && <Text style={styles.warning}>⚠️ Health Warning</Text>}
-            </View>
-          </TouchableOpacity>
+          <View key={pond.id} style={styles.pondCard}>
+            
+            <TouchableOpacity style={styles.pondContent} onPress={() => handlePondClick(pond)}>
+             <View style={styles.imgcontainer}><Image source={{ uri: pond.image }} style={styles.pondImage} /></View>
+              <View style={styles.pondDetails}>
+                <Text style={styles.city}>{pond.city}</Text>
+                <Text style={styles.fish}>{pond.fish}</Text>
+                <Text style={styles.health}>Health: {pond.health}</Text>
+                {pond.warning && <Text style={styles.warning}>⚠️ Health Warning</Text>}
+              </View>
+              
+            </TouchableOpacity>
+            <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
+          </View>
         ))}
       </ScrollView>
 
@@ -87,26 +92,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0f4f8',
   },
-  header: {
-    backgroundColor: '#00bcd4',
-    paddingVertical: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4, // Adding shadow for a better look
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 20,
+  imgcontainer: {
+    height: 'auto',
+    width: 100, // Matches the image width
   },
   pondList: {
     alignItems: 'center',
     paddingBottom: 80,
-    marginTop: 20, // Adjusted margin for spacing
+    marginTop: 20,
   },
   pondCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 3,
@@ -116,19 +113,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: '90%',
     overflow: 'hidden',
+    padding: 10, // Added padding for inner spacing
   },
-  pondImage: {
-    width: 100,
-    height: 100,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-    resizeMode: 'cover',
+  browseIcon: {
+    marginLeft: 10,
+    padding: 10, // Add padding for separation
+    alignSelf: 'center',
+  },
+  pondContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   pondDetails: {
     flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
+    paddingVertical: 10, // Adjusted padding for spacing
+    paddingHorizontal: 10,
     justifyContent: 'center',
+    marginRight: 10,
+  },
+  pondImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    resizeMode: 'cover',
   },
   city: {
     fontSize: 18,
@@ -171,5 +179,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
 
 export default PondList;

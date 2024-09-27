@@ -116,11 +116,10 @@ export default function AlertHistory() {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.pageHeader}>Alert History</Text>
 
       {/* Dropdown Section */}
       <TouchableOpacity style={styles.dropdownButton} onPress={() => setDropdownOpen(!dropdownOpen)}>
-        <Text style={styles.dropdownButtonText}>ALL</Text>
+        <Text style={styles.dropdownButtonText}>Filter</Text>
       </TouchableOpacity>
 
       {dropdownOpen && (
@@ -185,6 +184,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 10,
+    width:100
   },
   dropdownButtonText: {
     color: 'white',
