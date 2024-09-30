@@ -2,7 +2,6 @@ import React, { useContext, useState } from 'react';
 import { View, Text, Switch, StyleSheet, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { DarkModeContext } from '../contexts/DarkModeContext';
-import FishGuidePage from './fishguide';
 
 const Logo = () => (
   <Image
@@ -28,7 +27,7 @@ const Setting = () => {
   };
 
   const view_fish_guide = () => {
-    navigation.navigate('FishGuidePage');
+    navigation.navigate('Fish Guide');
   };
 
   const handleYes = () => {
@@ -43,7 +42,6 @@ const Setting = () => {
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <Text style={[styles.headertext, isDarkMode && styles.darkHeadertext, isDarkMode && styles.darkText]}>Settings</Text>
 
       <View style={styles.option}>
         <Text style={[styles.text, isDarkMode && styles.darkText]}>Dark Mode</Text>

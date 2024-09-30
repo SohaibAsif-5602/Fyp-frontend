@@ -1,19 +1,12 @@
-
-// PondList.js
-import React, { useEffect, useContext } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { DarkModeContext } from '../contexts/DarkModeContext';
-
-
 import { FontAwesome5 } from '@expo/vector-icons';
-
-
+import Footer from '../components/footer';
 
 const PondList = () => {
   const navigation = useNavigation();
-  const { isDarkMode } = useContext(DarkModeContext);
 
   // Check if a token exists in local storage
   useEffect(() => {
@@ -67,35 +60,6 @@ const PondList = () => {
   };
 
   return (
-
-    <View style={[styles.wrapper, isDarkMode && styles.darkWrapper]}>
-      <View style={[styles.header, isDarkMode && styles.darkHeader]}>
-        <Text style={[styles.headerTitle, isDarkMode && styles.darkHeaderTitle]}>
-          Pond Health Overview
-        </Text>
-      </View>
-      <ScrollView contentContainerStyle={styles.pondList}>
-        {ponds.map((pond) => (
-          <TouchableOpacity
-            key={pond.id}
-            style={[styles.pondCard, isDarkMode && styles.darkPondCard]}
-            onPress={() => handlePondClick(pond)}
-          >
-            <Image source={{ uri: pond.image }} style={styles.pondImage} />
-            <View style={styles.pondDetails}>
-              <Text style={[styles.city, isDarkMode && styles.darkText]}>{pond.city}</Text>
-              <Text style={[styles.fish, isDarkMode && styles.darkText]}>{pond.fish}</Text>
-              <Text style={[styles.health, isDarkMode && styles.darkHealth]}>
-                Health: {pond.health}
-              </Text>
-              {pond.warning && (
-                <Text style={[styles.warning, isDarkMode && styles.darkWarning]}>
-                  ⚠️ Health Warning
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
-
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.pondList}>
         {ponds.map((pond) => (
@@ -113,15 +77,11 @@ const PondList = () => {
             </TouchableOpacity>
             <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
           </View>
-
         ))}
       </ScrollView>
 
-      <TouchableOpacity
-        style={[styles.addButton, isDarkMode && styles.darkAddButton]}
-        onPress={() => navigation.navigate('AddPond')}
-      >
-        <Text style={[styles.addText, isDarkMode && styles.darkAddText]}>+ Add Pond</Text>
+      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddPond')}>
+        <Text style={styles.addText}>+ Add Pond</Text>
       </TouchableOpacity>
     </View>
   );
@@ -132,33 +92,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0f4f8',
   },
-
-  darkWrapper: {
-    backgroundColor: '#000',
-  },
-  header: {
-    backgroundColor: '#00bcd4',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  darkHeader: {
-    backgroundColor: '#000',
-  },
-  headerTitle: {
-    fontSize: 30,
-    color: '#fff', // White title text
-    fontWeight: 'bold',
-  },
-  darkHeaderTitle: {
-    color: '#fff',
-
   imgcontainer: {
     height: 'auto',
     width: 100, // Matches the image width
-
   },
   pondList: {
     alignItems: 'center',
@@ -179,17 +115,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 10, // Added padding for inner spacing
   },
-
-  darkPondCard: {
-    backgroundColor: '#333',
-  },
-  pondImage: {
-    width: 100,
-    height: 100,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-    resizeMode: 'cover',
-
   browseIcon: {
     marginLeft: 10,
     padding: 10, // Add padding for separation
@@ -229,19 +154,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#27ae60',
   },
-  darkText: {
-    color: '#fff',
-  },
-  darkHealth: {
-    color: '#27ae60',
-  },
   warning: {
     marginTop: 5,
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#e74c3c',
-  },
-  darkWarning: {
     color: '#e74c3c',
   },
   addButton: {
@@ -256,17 +172,11 @@ const styles = StyleSheet.create({
     bottom: 20,
     width: '80%',
   },
-  darkAddButton: {
-    backgroundColor: '#1a5276',
-  },
   addText: {
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  darkAddText: {
-    color: '#fff',
   },
 });
 

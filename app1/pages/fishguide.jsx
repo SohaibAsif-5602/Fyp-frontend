@@ -153,9 +153,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
+    marginVertical:20,
     alignItems: 'center',
     paddingVertical: 20,
     backgroundColor: '#1a9a9a',
+    borderRadius:10,
   },
   heading: {
     fontSize: 32,

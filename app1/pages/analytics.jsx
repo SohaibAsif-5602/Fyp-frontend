@@ -157,16 +157,8 @@ export default function Analytics() {
           <TouchableOpacity style={styles.deleteButton} onPress={() => console.log('Delete Pond')}>
             <Text style={styles.buttonText}>Delete Pond</Text>
           </TouchableOpacity>
-
-          </View>
-        </>,
-        () => setShowFinalConfirmation(false)
-      )}
-      
-    </ScrollView>
         </View>
       </ScrollView>
-
     </View>
   );
 }

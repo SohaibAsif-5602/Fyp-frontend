@@ -1,41 +1,60 @@
-import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
 import { ImageBackground } from 'react-native';
 import background from '../assets/water1.jpeg';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';  // Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const Login = async () => {
-    console.log("clicked")
+    console.log("clicked");
+    if (!email || !password) {
+      setAlertMessage("Please fill in all fields.");
+      setModalVisible(true);
+      return;
+    }
+
     try {
-      const response = await axios.post('http://192.168.10.47:8080/login', {
+      const response = await axios.post('http://10.120.170.47:8080/login', {
         email,
         password,
       });
 
       if (response.status === 200) {
         await AsyncStorage.setItem('token', response.data.token);
-        Alert.alert("Success", "Login successful");
-        navigation.navigate('Ponds');  // Navigate to the Ponds page
+        setAlertMessage("Login successful!");
+        setModalVisible(true);
+        setTimeout(() => {
+          setModalVisible(false);
+          navigation.navigate('MainTabs'); // Navigate to the main screen
+        }, 1500); // Optional delay to show the success message
       }
     } catch (error) {
+      // Handle different error scenarios
       if (error.response) {
-        Alert.alert("Error", error.response.data);
+        // Server responded with a status other than 2xx
+        setAlertMessage(`Error: ${error.response.data.message || error.response.data}`);
+      } else if (error.request) {
+        // No response from the server
+        setAlertMessage("Network error: Please check your internet connection and try again.");
       } else {
-        console.log('Error:', error.message);
+        // Error occurred in setting up the request
+        setAlertMessage(`Unexpected error: ${error.message}`);
       }
+      setModalVisible(true);
     }
   };
 
   return (
-    <ImageBackground source={background} style={styles.imgcontainer}>
+    <View style={styles.imgcontainer}>
       <View style={styles.container}>
         <View style={styles.imgcontainer}>
           <Image source={require('../assets/topVector.jpg')} style={styles.topImage} />
@@ -82,7 +101,27 @@ const LoginScreen = () => {
           </View>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+      
+      {/* Custom Alert Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(!modalVisible)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalText}>{alertMessage}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
@@ -156,7 +195,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: 'center',
     marginTop: 20,
-    marginLeft: 90,
   },
   button: {
     backgroundColor: 'purple',
@@ -190,5 +228,35 @@ const styles = StyleSheet.create({
     fontSize: 19,
     color: 'purple',
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: 'black',
+  },
+  modalButton: {
+    backgroundColor: 'purple',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

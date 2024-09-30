@@ -1,8 +1,9 @@
-// Profile.js
 import React, { useContext } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { DarkModeContext } from '../contexts/DarkModeContext';
+import image from '../assets/me.jpg'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Profile() {
   const navigation = useNavigation();
@@ -13,18 +14,17 @@ export default function Profile() {
   };
 
   const logout = () => {
+    AsyncStorage.removeItem(token);
     navigation.navigate('Login');
   };
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <View style={[styles.header, isDarkMode && styles.darkHeader]}>
-        <Text style={[styles.title, isDarkMode && styles.darkHeaderText]}>User Profile</Text>
-      </View>
+     
 
       <View style={styles.profileContainer}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/100' }}
+          source={image}
           style={styles.profileImage}
         />
         <View style={styles.userDetails}>
@@ -33,7 +33,6 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* Menu buttons below the profile */}
       <View style={[styles.menu, isDarkMode && styles.darkMenu]}>
         <TouchableOpacity
           style={styles.menuItem}
@@ -72,32 +71,13 @@ const styles = StyleSheet.create({
   darkContainer: {
     backgroundColor: '#000',
   },
-  header: {
-    backgroundColor: '#00bcd4',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 50,
-  },
-  darkHeader: {
-    backgroundColor: '#000',
-  },
-  title: {
-    fontSize: 30,
-    color: '#fff', // White title text
-    fontWeight: 'bold',
-  },
-  darkHeaderText: {
-    color: '#fff',
-  },
   darkText: {
     color: '#fff',
   },
   profileContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 80,
+    marginTop: 20,
   },
   profileImage: {
     width: 210,
@@ -118,21 +98,20 @@ const styles = StyleSheet.create({
   },
   menu: {
     backgroundColor: '#fff',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    marginTop: 90,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    paddingHorizontal: 60,
+    marginTop: 30,
+    gap:10
   },
   darkMenu: {
     backgroundColor: '#333',
   },
   menuItem: {
     paddingVertical: 10,
+    paddingHorizontal:10,
+    borderColor: '#000',
+    borderWidth: 2,
+    borderRadius: 5,
+    borderStyle: 'solid',
   },
   menuText: {
     fontSize: 18,
