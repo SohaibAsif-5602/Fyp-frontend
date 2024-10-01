@@ -35,7 +35,7 @@ const SignupScreen = () => {
     }
 
     try {
-      const response = await axios.post('http://10.120.170.47:8080/signup', {
+      const response = await axios.post('http://10.120.167.44:8080/signup', {
         email: email,
         password: password,
         username: username

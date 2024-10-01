@@ -23,7 +23,7 @@ const LoginScreen = () => {
     }
 
     try {
-      const response = await axios.post('http://10.120.170.47:8080/login', {
+      const response = await axios.post('http://10.120.167.44:8080/login', {
         email,
         password,
       });

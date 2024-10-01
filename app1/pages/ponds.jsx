@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -7,73 +7,70 @@ import Footer from '../components/footer';
 
 const PondList = () => {
   const navigation = useNavigation();
+  const [ponds, setPonds] = useState([]);
 
-  // Check if a token exists in local storage
   useEffect(() => {
-    const checkToken = async () => {
+    const fetchPonds = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        console.log(token);
-
         if (!token) {
-          // If no token, redirect to the login screen
+          console.log('No token found. Redirecting to login.');
           navigation.navigate('Login');
+          return;
+        }
+
+        const response = await fetch('http://10.120.167.44:8080/getPonds', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('Response status:', response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          setPonds(data.ponds);
+        } else if (response.status === 401) {
+          console.error('Invalid token. Redirecting to login.');
+          await AsyncStorage.removeItem('token');
+          navigation.navigate('Login');
+        } else {
+          console.error('Failed to fetch ponds. Status:', response.status);
+          const errorData = await response.text();
+          console.error('Error details:', errorData);
         }
       } catch (error) {
-        console.error('Error fetching token', error);
+        console.error('Error fetching pond data:', error.message);
         navigation.navigate('Login');
       }
     };
 
-    checkToken();
+    fetchPonds();
   }, []);
 
-  const ponds = [
-    {
-      id: 1,
-      city: 'Islamabad',
-      fish: 'Catla',
-      health: '86%',
-      image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
-      warning: true,
-    },
-    {
-      id: 2,
-      city: 'Lahore',
-      fish: 'Rohu',
-      health: '72%',
-      image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
-      warning: true,
-    },
-    {
-      id: 3,
-      city: 'Karachi',
-      fish: 'Silver Carp',
-      health: '25%',
-      image: 'https://t3.ftcdn.net/jpg/05/66/14/16/360_F_566141635_0kJ26Xqbl2fTI1dFQBHJpRBWOM6C5Ryp.jpg',
-      warning: true,
-    },
-  ];
-
   const handlePondClick = (pond) => {
-    navigation.navigate('Analytics');
+    // Navigate to the Analytics screen and pass the pond_id as a parameter
+    navigation.navigate('Analytics', { pondId: pond.pond_id });
   };
 
   return (
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.pondList}>
-        {ponds.map((pond) => (
-          <View key={pond.id} style={styles.pondCard}>
-            
+        {ponds.map((pond, index) => (
+          <View key={index} style={styles.pondCard}>
             <TouchableOpacity style={styles.pondContent} onPress={() => handlePondClick(pond)}>
-             <View style={styles.imgcontainer}><Image source={{ uri: pond.image }} style={styles.pondImage} /></View>
-              <View style={styles.pondDetails}>
-                <Text style={styles.city}>{pond.city}</Text>
-                <Text style={styles.fish}>{pond.fish}</Text>
-                <Text style={styles.health}>Health: {pond.health}</Text>
-                {pond.warning && <Text style={styles.warning}>⚠️ Health Warning</Text>}
+              <View style={styles.imgcontainer}>
+                <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
               </View>
-              
+              <View style={styles.pondDetails}>
+                <Text style={styles.city}>{pond.pond_name}</Text>
+                <Text style={styles.fish}>{pond.pond_loc}</Text>
+                <Text style={styles.fish}>{pond.specie}</Text>
+                <Text style={styles.health}>Health: {pond.pond_score}%</Text>
+                {pond.pond_score < 50 && <Text style={styles.warning}>⚠️ Health Warning</Text>}
+              </View>
             </TouchableOpacity>
             <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
           </View>
@@ -94,7 +91,7 @@ const styles = StyleSheet.create({
   },
   imgcontainer: {
     height: 'auto',
-    width: 100, // Matches the image width
+    width: 100,
   },
   pondList: {
     alignItems: 'center',
@@ -113,11 +110,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: '90%',
     overflow: 'hidden',
-    padding: 10, // Added padding for inner spacing
+    padding: 10,
   },
   browseIcon: {
-    marginLeft: 10,
-    padding: 10, // Add padding for separation
+    marginLeft: 5,
+    padding: 5,
     alignSelf: 'center',
   },
   pondContent: {
@@ -127,14 +124,13 @@ const styles = StyleSheet.create({
   },
   pondDetails: {
     flex: 1,
-    paddingVertical: 10, // Adjusted padding for spacing
-    paddingHorizontal: 10,
+    paddingVertical: 0,
     justifyContent: 'center',
-    marginRight: 10,
+    marginLeft: 15,
   },
   pondImage: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: 10,
     resizeMode: 'cover',
   },
@@ -179,6 +175,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
 
 export default PondList;

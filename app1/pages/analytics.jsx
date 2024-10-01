@@ -10,10 +10,13 @@ import {
 import axios from 'axios';
 import { LineChart } from 'react-native-chart-kit';
 import RNPickerSelect from 'react-native-picker-select';
-import { useNavigation } from '@react-navigation/native';
-
+import { useNavigation, useRoute } from '@react-navigation/native'; // Import useRoute
+import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function Analytics() {
   const navigation = useNavigation();
+  const route = useRoute(); // Use useRoute to get parameters
+  const pondId = route.params?.pondId; // Get the pondId passed from the previous screen
+
   const [temperatureData, setTemperatureData] = useState([]);
   const [phData, setPhData] = useState([]);
   const [turbidityData, setTurbidityData] = useState([]);
@@ -26,25 +29,44 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const channelID = '2592426';
-    const apiKey = '45H5S1N645GKKUCB';
-    const url = `https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${apiKey}&results=100`;
+    const fetchPondData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          console.log('No token found. Redirecting to login.');
+          navigation.navigate('Login');
+          return;
+        }
 
-    axios.get(url)
-      .then(response => {
-        const feeds = response.data.feeds;
-        const formattedDates = feeds.map(feed => feed.created_at.split('T')[0]);
-        setDates([...new Set(formattedDates)]);
-        setTemperatureData(feeds.map(feed => ({ date: feed.created_at.split('T')[0], value: parseFloat(feed.field1) })));
-        setPhData(feeds.map(feed => ({ date: feed.created_at.split('T')[0], value: parseFloat(feed.field2) })));
-        setTurbidityData(feeds.map(feed => ({ date: feed.created_at.split('T')[0], value: parseFloat(feed.field3) })));
+        const response = await axios.get(`http://10.120.167.44:8080/getPondData/${pondId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.status === 200) {
+          const { temperatureData, phData, turbidityData, dates, pond_score } = response.data;
+          setDates([...new Set(dates)]);
+          setTemperatureData(temperatureData);
+          setPhData(phData);
+          setTurbidityData(turbidityData);
+          setFishHealth(pond_score);
+          setLoading(false);
+        } else {
+          console.error('Failed to fetch pond data. Status:', response.status);
+          navigation.navigate('Login');
+        }
+      } catch (error) {
+        console.error('Error fetching pond data:', error.message);
         setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching data from ThingSpeak:', error);
-        setLoading(false);
-      });
-  }, []);
+      }
+    };
+
+    if (pondId) {
+      fetchPondData(); // Only fetch data if pondId is available
+    }
+  }, [pondId]);
 
   useEffect(() => {
     let dataToFilter = [];
@@ -162,6 +184,8 @@ export default function Analytics() {
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
