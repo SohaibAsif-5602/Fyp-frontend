@@ -34,21 +34,25 @@ const SignupScreen = () => {
       return;
     }
 
-    try {
-      const response = await axios.post('http://10.120.167.44:8080/signup', {
+   try {
+       const response = await axios.post(process.env.EXPO_PUBLIC_API_URL+'/sendEmail', {
         email: email,
-        password: password,
-        username: username
       });
 
       // Handle success response
-      setAlertMessage("Registered successfully");
-      setModalVisible(true);
-
+      //setAlertMessage("2fa Code Sent successfully");
+      //setModalVisible(true);
+      navigation.navigate('CodeVerification', { 
+        email: email,
+        password: password,
+        username: username });
       // Navigate to the desired screen upon success
       setTimeout(() => {
         setModalVisible(false);
-        navigation.navigate('Login');
+        navigation.navigate('CodeVerification', { 
+          email: email,
+          password: password,
+          username: username });
       }, 1500);
       
     } catch (error) {

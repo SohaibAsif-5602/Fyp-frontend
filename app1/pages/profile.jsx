@@ -13,8 +13,8 @@ export default function Profile() {
     navigation.navigate('Subscription');
   };
 
-  const logout = () => {
-    AsyncStorage.removeItem(token);
+  const logout = async () => {
+    await AsyncStorage.removeItem(token);
     navigation.navigate('Login');
   };
 

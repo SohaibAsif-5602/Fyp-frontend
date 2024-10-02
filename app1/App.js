@@ -12,6 +12,8 @@ import AlertSettingsPage from './pages/alertsettingspage';
 import PondSetting from './pages/pondsetting';
 import SplashScreen from './pages/splashscreen';
 import MainTabs from './pages/Maintabs';
+import CodeVerificationScreen from './pages/VerificationEntry';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -60,6 +62,7 @@ export default function App() {
         <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
         <Stack.Screen name="UserDetails" component={UserDetails} />
         <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="CodeVerification" component={CodeVerificationScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

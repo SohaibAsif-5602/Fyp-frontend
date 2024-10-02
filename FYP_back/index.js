@@ -29,7 +29,6 @@ db.connect((err) => {
 
 
 app.post('/signup',(req,res)=>{
-    
     const {email,password,username}=req.body;
     
     db.query("Select * from Users where email=?",[email],(err,result)=>{
@@ -183,6 +182,100 @@ app.get('/getPondData/:pondId', (req, res) => {
         });
     });
 });
+
+app.post('/sendEmail', (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+    db.query("Select * from Users where email=?",[email],(err,result)=>{
+        if(err) return res.status(500).json({msg:"Server Error 1"});
+        if(result.length>0) return res.status(400).json({msg:"user already exists"})
+        });
+
+    db.query("SELECT verification_code FROM EmailVerification WHERE email = ?", [email], (err, result) => {
+        if (err) return res.status(500).json({ message: "Database query error" });
+
+        let code;
+
+        if (result.length > 0) {
+            code = result[0].verification_code;
+        } else {
+            code = Math.floor(100000 + Math.random() * 900000);
+
+            db.query("INSERT INTO EmailVerification(email, verification_code) VALUES(?, ?)", [email, code], (err, insertResult) => {
+                if (err) return res.status(500).json({ message: "Error inserting into database" });
+            });
+        }
+        try {
+            let transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: '210886@students.au.edu.pk', // Your email address
+                    pass: 'sohaib210886'   // Your email password
+                }
+            });
+
+            let mailOptions = {
+                from: '210886@students.au.edu.pk',
+                to: email,
+                subject: 'Machiro Two-Factor Authentication Code',
+                html: `
+                <div style="background-color: #5e5e5e; color: white; padding: 20px; text-align: center;">
+                    <h1>Machiro Two-Factor Authentication Code</h1>
+                    <p>Dear User,</p>
+                    <p>Your two-factor authentication code is: <strong>${code}</strong></p>
+                    <p>Please enter this code to verify your account.</p>
+                    <p>If you did not request this code, please ignore this email.</p>
+                    <p>Best regards,<br>The Machiro Team</p>
+                </div>
+                `
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    return res.status(400).json({ message: error.message });
+                } else {
+                    return res.status(200).json({ message: 'Verification email sent to your account' });
+                }
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    });
+});
+
+app.post('/verifyCode', (req, res) => {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+        return res.status(400).json({ message: 'Email and code are required' });
+    }
+
+    // Check if email and code match in the database
+    db.query("SELECT * FROM EmailVerification WHERE email = ? AND verification_code = ?", [email, code], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database query error' });
+        }
+
+        if (result.length > 0) {
+            // If the email and code match, proceed to delete the entry
+            db.query("DELETE FROM EmailVerification WHERE email = ?", [email], (deleteErr, deleteResult) => {
+                if (deleteErr) {
+                    return res.status(500).json({ message: 'Error deleting verification record' });
+                }
+
+                // Email verified and record deleted successfully
+                return res.status(200).json({ message: 'Email verified successfully!' });
+            });
+        } else {
+            // If no match is found, verification fails
+            return res.status(400).json({ message: 'Invalid email or verification code' });
+        }
+    });
+});
+
 
 
 app.listen(8080, '0.0.0.0', () => {

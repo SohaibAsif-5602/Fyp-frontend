@@ -19,7 +19,7 @@ const PondList = () => {
           return;
         }
 
-        const response = await fetch('http://10.120.167.44:8080/getPonds', {
+        const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/getPonds', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,

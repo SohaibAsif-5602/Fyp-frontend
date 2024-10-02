@@ -38,7 +38,7 @@ export default function Analytics() {
           return;
         }
 
-        const response = await axios.get(`http://10.120.167.44:8080/getPondData/${pondId}`, {
+        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+`/getPondData/${pondId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
