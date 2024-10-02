@@ -7,15 +7,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Ponds from '../pages/ponds';
 import ProfileScreen from '../pages/profile';
 import Setting from '../pages/setting';
-
-
 import Analytics from "../pages/analytics";
 import Subscription from "../pages/subscription";
 import UserDetails from "../pages/UserDetails";
-
-
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
+import FishGuidePage from '../pages/fishguide';
 
 
 
@@ -30,7 +27,7 @@ function CustomHeader({ title, canGoBack }) {
         {canGoBack && (
           <TouchableOpacity 
             onPress={() => { console.log("clicked"); navigation.goBack(); }} 
-            style={{ marginLeft: 0, padding: 10 }} // Added padding to ensure touchable area
+            style={{ marginLeft: 0, padding: 10 }} 
           >
             <Icon name="arrow-back" size={28} color="#fff" paddingTop={35} />
           </TouchableOpacity>
@@ -101,17 +98,21 @@ function MainTabs() {
         component={UserDetails}
         options={{ tabBarButton: () => null }}
         />
-
+      <Tab.Screen
         name="AddPond"
         component={AddPond}
         options={{ tabBarButton: () => null }}
-      />
+        />
       <Tab.Screen
         name="AlertHistory"
         component={AlertHistory}
         options={{ tabBarButton: () => null }}
       />
-
+      <Tab.Screen
+        name="Fish Guide"
+        component={FishGuidePage}
+        options={{ tabBarButton: () => null }}
+      />
     </Tab.Navigator>
   );
 }

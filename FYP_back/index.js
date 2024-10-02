@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
+import axios from 'axios'
 
 const app = express();
 app.use(cors());
@@ -15,8 +16,8 @@ const saltrounds = 10;
 
 const db = sql.createConnection({
     host: 'localhost',
-    database: 'taha',
-    password: '2003',
+    database: 'FYPDATABASE',
+    password: 'Sohaib210886sql',
     user: 'root'
 });
 
@@ -28,7 +29,6 @@ db.connect((err) => {
 
 
 app.post('/signup',(req,res)=>{
-    
     const {email,password,username}=req.body;
     
     db.query("Select * from Users where email=?",[email],(err,result)=>{
@@ -46,7 +46,7 @@ app.post('/signup',(req,res)=>{
     })
     });
  });
-app.post('/login', (req, res) => {
+ app.post('/login', (req, res) => {
     const { email, password } = req.body;
 
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
@@ -61,11 +61,222 @@ app.post('/login', (req, res) => {
             if (err) return res.status(500).json("Error comparing password");
             if (!isMatch) return res.status(400).json("Passwords do not match");
 
-            const token = jwt.sign({ user: user.id }, secretKey, { expiresIn: '1h' });
+            const token = jwt.sign({ user: user.user_id }, secretKey, { expiresIn: '1h' });
             return res.status(200).json({ msg: "Login Successful", token });
         });
     });
 });
+
+app.get('/getPonds', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(403).json({ msg: "Token is required" });
+    }
+
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ msg: "Invalid token" });
+        }
+
+        console.log('Decoded token:', decoded);
+        const userId = decoded.user;
+        console.log('User ID:', userId);
+
+        const query = `
+            SELECT
+                p.pond_id ,
+                p.pond_name, 
+                p.pond_loc, 
+                f.specie, 
+                f.imagelink, 
+                p.pond_score 
+            FROM Pond p
+            JOIN Fishgroup f ON p.fish_id = f.id
+            WHERE p.user_id = ?`;
+
+        db.query(query, [userId], (err, results) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return res.status(500).json({ msg: "Database query error" });
+            }
+
+            return res.status(200).json({ ponds: results });
+        });
+    });
+});
+
+app.get('/getPondData/:pondId', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const pondId = req.params.pondId;
+
+    if (!token) {
+        return res.status(403).json({ msg: 'Token is required' });
+    }
+
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ msg: 'Invalid token' });
+        }
+
+        const userId = decoded.user;
+        
+        // Verify that the pond belongs to the user and fetch the channel ID and read key
+        const query = `
+            SELECT p.channel_id, p.pond_score, i.channel_read 
+            FROM Pond p 
+            JOIN Iot i ON p.channel_id = i.channel_id 
+            WHERE p.pond_id = ? AND p.user_id = ?`;
+        console.log('Pond ID:', pondId);
+        console.log('User ID:', userId);
+        db.query(query, [pondId, userId], (err, results) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return res.status(500).json({ msg: 'Database query error' });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({ msg: 'Pond not found or access denied' });
+            }
+
+            const { channel_id, pond_score, channel_read } = results[0];
+
+            // Fetch data from ThingSpeak using the channel ID and API read key
+            const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
+
+            axios.get(url)
+                .then(response => {
+                    const feeds = response.data.feeds;
+                    const formattedDates = feeds.map(feed => feed.created_at.split('T')[0]);
+
+                    const temperatureData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field1)
+                    }));
+
+                    const phData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field2)
+                    }));
+
+                    const turbidityData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field3)
+                    }));
+
+                    // Send response containing pond health score and ThingSpeak data
+                    res.status(200).json({
+                        pond_score: pond_score,
+                        temperatureData: temperatureData,
+                        phData: phData,
+                        turbidityData: turbidityData,
+                        dates: [...new Set(formattedDates)]
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data from ThingSpeak:', error);
+                    res.status(500).json({ msg: 'Error fetching data from ThingSpeak' });
+                });
+        });
+    });
+});
+
+app.post('/sendEmail', (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+    db.query("Select * from Users where email=?",[email],(err,result)=>{
+        if(err) return res.status(500).json({msg:"Server Error 1"});
+        if(result.length>0) return res.status(400).json({msg:"user already exists"})
+        });
+
+    db.query("SELECT verification_code FROM EmailVerification WHERE email = ?", [email], (err, result) => {
+        if (err) return res.status(500).json({ message: "Database query error" });
+
+        let code;
+
+        if (result.length > 0) {
+            code = result[0].verification_code;
+        } else {
+            code = Math.floor(100000 + Math.random() * 900000);
+
+            db.query("INSERT INTO EmailVerification(email, verification_code) VALUES(?, ?)", [email, code], (err, insertResult) => {
+                if (err) return res.status(500).json({ message: "Error inserting into database" });
+            });
+        }
+        try {
+            let transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: '210886@students.au.edu.pk', // Your email address
+                    pass: 'sohaib210886'   // Your email password
+                }
+            });
+
+            let mailOptions = {
+                from: '210886@students.au.edu.pk',
+                to: email,
+                subject: 'Machiro Two-Factor Authentication Code',
+                html: `
+                <div style="background-color: #5e5e5e; color: white; padding: 20px; text-align: center;">
+                    <h1>Machiro Two-Factor Authentication Code</h1>
+                    <p>Dear User,</p>
+                    <p>Your two-factor authentication code is: <strong>${code}</strong></p>
+                    <p>Please enter this code to verify your account.</p>
+                    <p>If you did not request this code, please ignore this email.</p>
+                    <p>Best regards,<br>The Machiro Team</p>
+                </div>
+                `
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    return res.status(400).json({ message: error.message });
+                } else {
+                    return res.status(200).json({ message: 'Verification email sent to your account' });
+                }
+            });
+        } catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    });
+});
+
+app.post('/verifyCode', (req, res) => {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+        return res.status(400).json({ message: 'Email and code are required' });
+    }
+
+    // Check if email and code match in the database
+    db.query("SELECT * FROM EmailVerification WHERE email = ? AND verification_code = ?", [email, code], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database query error' });
+        }
+
+        if (result.length > 0) {
+            // If the email and code match, proceed to delete the entry
+            db.query("DELETE FROM EmailVerification WHERE email = ?", [email], (deleteErr, deleteResult) => {
+                if (deleteErr) {
+                    return res.status(500).json({ message: 'Error deleting verification record' });
+                }
+
+                // Email verified and record deleted successfully
+                return res.status(200).json({ message: 'Email verified successfully!' });
+            });
+        } else {
+            // If no match is found, verification fails
+            return res.status(400).json({ message: 'Invalid email or verification code' });
+        }
+    });
+});
+
+
 
 app.listen(8080, '0.0.0.0', () => {
     console.log("Server Running on 8080");

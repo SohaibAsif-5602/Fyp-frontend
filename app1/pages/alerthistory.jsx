@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import axios from 'axios';
-import Header from '../components/Header';
-import Footer from '../components/footer';
-// Assume icon imports remain the same
+
 const temperatureIcon = require('../assets/high-temperature.png');
 const lowtemperatureIcon = require('../assets/low-temperature.png');
 const phIcon = require('../assets/high-ph.png');
