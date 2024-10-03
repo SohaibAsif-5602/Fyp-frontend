@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Import the Picker
 import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddPond = ({ navigation }) => {
   const [pondName, setPondName] = useState('');
@@ -20,12 +21,94 @@ const AddPond = ({ navigation }) => {
 
   const { isDarkMode } = useContext(DarkModeContext); // Consume isDarkMode from context
 
-  const handleSubmit = () => {
+  // const handleSubmit = () => {
+  //   if (pondName && location && fishSpecies && fishAge) {
+  //     if (parseInt(fishAge) <= 6) {
+        
+  //       // Handle form submission here (e.g., API call or local state update)
+  //       Alert.alert('Pond Added', ${pondName} pond added successfully!);
+  //       navigation.goBack();
+  //     } else {
+  //       Alert.alert('Error', 'Fish age cannot be more than 6 months.');
+  //     }
+  //   } else {
+  //     Alert.alert('Error', 'Please fill all fields');
+  //   }
+  // };
+
+  // const handleSubmit = async () => {
+  //   if (pondName && location && fishSpecies && fishAge) {
+  //     if (parseInt(fishAge) <= 6) {
+  //       try {
+  //         // Make a POST request to your backend to create a ThingSpeak channel
+  //         const response = await fetch('http://10.120.150.227:8080/create-channel', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({ channelName: pondName }), // Send the pond name to the backend
+  //         });
+  
+  //         const data = await response.json();
+  
+  //         if (response.ok) {
+  //           // Handle successful response
+  //           Alert.alert('Pond Added', ${pondName} pond added successfully!);
+  //           navigation.goBack();
+  //         } else {
+  //           // Handle error from the server
+  //           Alert.alert('Error', data.error || 'Failed to create a channel. Please try again.');
+  //         }
+  //       } catch (error) {
+  //         console.error('Error creating channel:', error);
+  //         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+  //       }
+  //     } else {
+  //       Alert.alert('Error', 'Fish age cannot be more than 6 months.');
+  //     }
+  //   } else {
+  //     Alert.alert('Error', 'Please fill all fields');
+  //   }
+  // };
+  const handleSubmit = async () => {
     if (pondName && location && fishSpecies && fishAge) {
       if (parseInt(fishAge) <= 6) {
-        // Handle form submission here (e.g., API call or local state update)
-        Alert.alert('Pond Added', `${pondName} pond added successfully!`);
-        navigation.goBack();
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            console.log('No token found. Redirecting to login.');
+            navigation.navigate('Login');
+            return;
+          }
+   
+            const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/add-pond', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              channelName: pondName,
+              location: location,
+              fishSpecies: fishSpecies,
+              fishAge: fishAge,
+            }), // Send all required data to the backend
+          });
+  
+          const data = await response.json();
+  
+          if (response.ok) {
+            // Handle successful response
+            Alert.alert(`'Pond Added', ${pondName} pond added successfully!`);
+            navigation.goBack();
+          } else {
+            // Handle error from the server
+            Alert.alert('Error', data.error || 'Failed to create a channel. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error creating channel:', error);
+          Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+        }
       } else {
         Alert.alert('Error', 'Fish age cannot be more than 6 months.');
       }
@@ -33,6 +116,7 @@ const AddPond = ({ navigation }) => {
       Alert.alert('Error', 'Please fill all fields');
     }
   };
+  
 
   return (
     <ScrollView contentContainerStyle={[styles.container, isDarkMode && styles.darkContainer]}>

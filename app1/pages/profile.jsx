@@ -14,7 +14,7 @@ export default function Profile() {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem(token);
+    await AsyncStorage.removeItem('token');
     navigation.navigate('Login');
   };
 

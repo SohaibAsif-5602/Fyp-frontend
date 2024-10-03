@@ -88,13 +88,13 @@ export default function Analytics() {
   const renderChart = (data, title) => {
     const labels = data.map(item => item.date);
     const values = data.map(item => item.value);
-
+  
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>{title}</Text>
-        {loading ? (
+        {loading || data.length === 0 ? ( // Check if data is empty
           <View style={styles.skeletonGraph}>
-            <ActivityIndicator size="large" color="#007bff" />
+            <Text style={styles.noDataText}>No Data Available</Text>
           </View>
         ) : (
           <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }}>
@@ -129,7 +129,8 @@ export default function Analytics() {
       </View>
     );
   };
-
+  
+  
   return (
     <View style={styles.container}>
       <ScrollView>
