@@ -14,7 +14,7 @@ export default function Profile() {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem(token);
+    await AsyncStorage.removeItem('token');
     navigation.navigate('Login');
   };
 
@@ -28,8 +28,8 @@ export default function Profile() {
           style={styles.profileImage}
         />
         <View style={styles.userDetails}>
-          <Text style={[styles.userName, isDarkMode && styles.darkText]}>Taha Shayan</Text>
-          <Text style={[styles.userEmail, isDarkMode && styles.darkText]}>taha@gmail.com</Text>
+          <Text style={[styles.userName, isDarkMode && styles.darkText]}></Text>
+          <Text style={[styles.userEmail, isDarkMode && styles.darkText]}></Text>
         </View>
       </View>
 

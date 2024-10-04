@@ -17,7 +17,7 @@ const saltrounds = 10;
 const db = sql.createConnection({
     host: 'localhost',
     database: 'FYPDATABASE',
-    password: 'Sohaib210886sql',
+    password: '2003',
     user: 'root'
 });
 
@@ -273,6 +273,116 @@ app.post('/verifyCode', (req, res) => {
             // If no match is found, verification fails
             return res.status(400).json({ message: 'Invalid email or verification code' });
         }
+    });
+});
+
+app.post('/sendResetCode', (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Check if the user exists
+    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
+        if (err) return res.status(500).json({ message: "Database query error" });
+        if (result.length === 0) return res.status(404).json({ message: "User not found" });
+
+        // Generate a reset code
+        const resetCode = Math.floor(100000 + Math.random() * 900000);
+
+        // Store the reset code in the database
+        db.query("INSERT INTO PasswordReset(email, reset_code) VALUES(?, ?) ON DUPLICATE KEY UPDATE reset_code = VALUES(reset_code)", [email, resetCode], (err, insertResult) => {
+            if (err) return res.status(500).json({ message: "Error inserting into database" });
+
+            // Send email with reset code
+            let transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: '210886@students.au.edu.pk',
+                    pass: 'sohaib210886'
+                }
+            });
+
+            let mailOptions = {
+                from: '210886@students.au.edu.pk',
+                to: email,
+                subject: 'Machiro Password Reset Code',
+                html: `
+                <div style="background-color: #5e5e5e; color: white; padding: 20px; text-align: center;">
+                    <h1>Machiro Password Reset Code</h1>
+                    <p>Your password reset code is: <strong>${resetCode}</strong></p>
+                    <p>If you did not request this code, please ignore this email.</p>
+                    <p>Best regards,<br>The Machiro Team</p>
+                </div>
+                `
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    return res.status(400).json({ message: error.message });
+                } else {
+                    return res.status(200).json({ message: 'Password reset code sent to your email' });
+                }
+            });
+        });
+    });
+});
+
+// Verify reset code
+app.post('/verifyResetCode', (req, res) => {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+        return res.status(400).json({ message: 'Email and code are required' });
+    }
+
+    db.query("SELECT * FROM PasswordReset WHERE email = ? AND reset_code = ?", [email, code], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database query error' });
+        }
+
+        if (result.length > 0) {
+            return res.status(200).json({ message: 'Reset code verified successfully' });
+        } else {
+            return res.status(400).json({ message: 'Invalid email or reset code' });
+        }
+    });
+});
+
+// Reset password
+app.post('/resetPassword', (req, res) => {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+        return res.status(400).json({ message: 'Email, code, and new password are required' });
+    }
+
+    db.query("SELECT * FROM PasswordReset WHERE email = ? AND reset_code = ?", [email, code], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database query error' });
+        }
+
+        if (result.length === 0) {
+            return res.status(400).json({ message: 'Invalid email or reset code' });
+        }
+
+        // Hash the new password
+        bcrypt.hash(newPassword, saltrounds, (err, hash) => {
+            if (err) return res.status(500).json({ message: "Error hashing password" });
+
+            // Update the password in the database
+            db.query("UPDATE Users SET password = ? WHERE email = ?", [hash, email], (updateErr, updateResult) => {
+                if (updateErr) return res.status(500).json({ message: "Error updating password" });
+
+                // Delete the reset code from the database
+                db.query("DELETE FROM PasswordReset WHERE email = ?", [email], (deleteErr, deleteResult) => {
+                    if (deleteErr) console.error("Error deleting reset code:", deleteErr);
+
+                    return res.status(200).json({ message: 'Password reset successfully' });
+                });
+            });
+        });
     });
 });
 
