@@ -30,6 +30,7 @@ const LoginScreen = () => {
 
       if (response.status === 200) {
         await AsyncStorage.setItem('token', response.data.token);
+        console.log(response.data.token);
         setAlertMessage("Login successful!");
         setModalVisible(true);
         setTimeout(() => {

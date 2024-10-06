@@ -17,7 +17,7 @@ const saltrounds = 10;
 const db = sql.createConnection({
     host: 'localhost',
     database: 'FYPDATABASE',
-    password: '2003',
+    password: 'Sohaib210886sql',
     user: 'root'
 });
 
@@ -103,6 +103,82 @@ app.get('/getPonds', (req, res) => {
             }
 
             return res.status(200).json({ ponds: results });
+        });
+    });
+});
+
+app.get('/getPondData/:pondId', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const pondId = req.params.pondId;
+
+    if (!token) {
+        return res.status(403).json({ msg: 'Token is required' });
+    }
+
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ msg: 'Invalid token' });
+        }
+
+        const userId = decoded.user;
+        
+        // Verify that the pond belongs to the user and fetch the channel ID and read key
+        const query = `
+            SELECT p.channel_id, p.pond_score, i.channel_read 
+            FROM Pond p 
+            JOIN Iot i ON p.channel_id = i.channel_id 
+            WHERE p.pond_id = ? AND p.user_id = ?`;
+        console.log('Pond ID:', pondId);
+        console.log('User ID:', userId);
+        db.query(query, [pondId, userId], (err, results) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return res.status(500).json({ msg: 'Database query error' });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({ msg: 'Pond not found or access denied' });
+            }
+
+            const { channel_id, pond_score, channel_read } = results[0];
+
+            // Fetch data from ThingSpeak using the channel ID and API read key
+            const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
+
+            axios.get(url)
+                .then(response => {
+                    const feeds = response.data.feeds;
+                    const formattedDates = feeds.map(feed => feed.created_at.split('T')[0]);
+
+                    const temperatureData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field1)
+                    }));
+
+                    const phData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field2)
+                    }));
+
+                    const turbidityData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field3)
+                    }));
+
+                    // Send response containing pond health score and ThingSpeak data
+                    res.status(200).json({
+                        pond_score: pond_score,
+                        temperatureData: temperatureData,
+                        phData: phData,
+                        turbidityData: turbidityData,
+                        dates: [...new Set(formattedDates)]
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data from ThingSpeak:', error);
+                    res.status(500).json({ msg: 'Error fetching data from ThingSpeak' });
+                });
         });
     });
 });
@@ -515,18 +591,101 @@ app.listen(8080, '0.0.0.0', () => {
 
 
 
+app.delete('/delete-pond/:pondId', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(403).json({ msg: "Token is required" });
+    }
+
+    // Verify the JWT token
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ msg: "Invalid token" });
+        }
+
+        const userId = decoded.user;
+        const pondId = req.params.pondId;
+
+        // Check if the pond belongs to the user
+        const verifyQuery = 'SELECT pond_id, channel_id, fish_id FROM Pond WHERE pond_id = ? AND user_id = ?';
+        db.query(verifyQuery, [pondId, userId], (err, results) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return res.status(500).json({ msg: "Database query error" });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({ msg: "Pond not found or does not belong to the user." });
+            }
+
+            const { channel_id, fish_id } = results[0];
+            console.log('Channel ID:', channel_id);
+
+            // Begin transaction to ensure atomic deletion
+            db.beginTransaction((transactionErr) => {
+                if (transactionErr) {
+                    return res.status(500).json({ msg: "Transaction error." });
+                }
+
+                // Delete the pond first
+                const deletePondQuery = 'DELETE FROM Pond WHERE pond_id = ?';
+                db.query(deletePondQuery, [pondId], (pondErr) => {
+                    if (pondErr) {
+                        return db.rollback(() => {
+                            res.status(500).json({ msg: "Error deleting pond." });
+                        });
+                    }
+
+                    // Delete alerts for the pond's channel
+                    const deleteAlertsQuery = 'DELETE FROM Alert WHERE channel_id = ?';
+                    db.query(deleteAlertsQuery, [channel_id], (alertErr) => {
+                        if (alertErr) {
+                            return db.rollback(() => {
+                                res.status(500).json({ msg: "Error deleting alerts." });
+                            });
+                        }
+
+                        // Delete the IoT channel data
+                        const deleteIotQuery = 'DELETE FROM Iot WHERE channel_id = ?';
+                        db.query(deleteIotQuery, [channel_id], (iotErr) => {
+                            if (iotErr) {
+                                return db.rollback(() => {
+                                    res.status(500).json({ msg: "Error deleting IoT channel." });
+                                });
+                            }
+
+                            // Delete the fish data
+                            const deleteFishQuery = 'DELETE FROM Fishgroup WHERE id = ?';
+                            db.query(deleteFishQuery, [fish_id], (fishErr) => {
+                                if (fishErr) {
+                                    return db.rollback(() => {
+                                        res.status(500).json({ msg: "Error deleting fish data." });
+                                    });
+                                }
+
+                                // Commit the transaction
+                                db.commit((commitErr) => {
+                                    if (commitErr) {
+                                        return db.rollback(() => {
+                                            res.status(500).json({ msg: "Transaction commit error." });
+                                        });
+                                    }
+                                    res.status(200).json({ msg: "Pond and related data deleted successfully." });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+});
 
 
 
 
 
 
-// app.post('/protected',(req,res)=>{
-//     const token=req.headers['authorization']?.split('')[1];
-//     if(!token) return res.status(401).json("No token provided");
 
-//     jwt.verify(token,secretKey,(err,decoded)=>{
-//         if(err) return res.status(300).json("Invalid token");
-//         res.status(200).json({msg:'You are autorized',userId:decoded.userId})
-//     })
-// })

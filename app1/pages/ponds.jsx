@@ -27,7 +27,8 @@ const PondList = () => {
           },
         });
 
-        console.log('Response status:', response.status);
+        console.log('Response status of ponds:', response.status);
+        
 
         if (response.ok) {
           const data = await response.json();
@@ -42,7 +43,7 @@ const PondList = () => {
           console.error('Error details:', errorData);
         }
       } catch (error) {
-        console.error('Error fetching pond data:', error.message);
+        console.error('Error fetching ponds data:', error.message);
         navigation.navigate('Login');
       }
     };
