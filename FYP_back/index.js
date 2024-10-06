@@ -591,7 +591,7 @@ app.listen(8080, '0.0.0.0', () => {
 
 
 
-app.delete('/delete-pond/:pondId', (req, res) => {
+function verifyToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -599,87 +599,97 @@ app.delete('/delete-pond/:pondId', (req, res) => {
         return res.status(403).json({ msg: "Token is required" });
     }
 
-    // Verify the JWT token
     jwt.verify(token, secretKey, (err, decoded) => {
         if (err) {
             return res.status(401).json({ msg: "Invalid token" });
         }
 
-        const userId = decoded.user;
-        const pondId = req.params.pondId;
+        req.userId = decoded.user; // Attach userId to the request object
+        next(); // Proceed to the next middleware or route handler
+    });
+}
 
-        // Check if the pond belongs to the user
-        const verifyQuery = 'SELECT pond_id, channel_id, fish_id FROM Pond WHERE pond_id = ? AND user_id = ?';
-        db.query(verifyQuery, [pondId, userId], (err, results) => {
-            if (err) {
-                console.error('Database query error:', err);
-                return res.status(500).json({ msg: "Database query error" });
+// Helper function to delete records in /delete-pond API
+function deleteRecords(channel_id, fish_id, pondId, res) {
+    // Begin transaction to ensure atomic deletion
+    db.beginTransaction((transactionErr) => {
+        if (transactionErr) {
+            return res.status(500).json({ msg: "Transaction error." });
+        }
+
+        // Delete the pond first
+        const deletePondQuery = 'DELETE FROM Pond WHERE pond_id = ?';
+        db.query(deletePondQuery, [pondId], (pondErr) => {
+            if (pondErr) {
+                return db.rollback(() => {
+                    res.status(500).json({ msg: "Error deleting pond." });
+                });
             }
 
-            if (results.length === 0) {
-                return res.status(404).json({ msg: "Pond not found or does not belong to the user." });
-            }
-
-            const { channel_id, fish_id } = results[0];
-            console.log('Channel ID:', channel_id);
-
-            // Begin transaction to ensure atomic deletion
-            db.beginTransaction((transactionErr) => {
-                if (transactionErr) {
-                    return res.status(500).json({ msg: "Transaction error." });
+            // Delete alerts for the pond's channel
+            const deleteAlertsQuery = 'DELETE FROM Alert WHERE channel_id = ?';
+            db.query(deleteAlertsQuery, [channel_id], (alertErr) => {
+                if (alertErr) {
+                    return db.rollback(() => {
+                        res.status(500).json({ msg: "Error deleting alerts." });
+                    });
                 }
 
-                // Delete the pond first
-                const deletePondQuery = 'DELETE FROM Pond WHERE pond_id = ?';
-                db.query(deletePondQuery, [pondId], (pondErr) => {
-                    if (pondErr) {
+                // Delete the IoT channel data
+                const deleteIotQuery = 'DELETE FROM Iot WHERE channel_id = ?';
+                db.query(deleteIotQuery, [channel_id], (iotErr) => {
+                    if (iotErr) {
                         return db.rollback(() => {
-                            res.status(500).json({ msg: "Error deleting pond." });
+                            res.status(500).json({ msg: "Error deleting IoT channel." });
                         });
                     }
 
-                    // Delete alerts for the pond's channel
-                    const deleteAlertsQuery = 'DELETE FROM Alert WHERE channel_id = ?';
-                    db.query(deleteAlertsQuery, [channel_id], (alertErr) => {
-                        if (alertErr) {
+                    // Delete the fish data
+                    const deleteFishQuery = 'DELETE FROM Fishgroup WHERE id = ?';
+                    db.query(deleteFishQuery, [fish_id], (fishErr) => {
+                        if (fishErr) {
                             return db.rollback(() => {
-                                res.status(500).json({ msg: "Error deleting alerts." });
+                                res.status(500).json({ msg: "Error deleting fish data." });
                             });
                         }
 
-                        // Delete the IoT channel data
-                        const deleteIotQuery = 'DELETE FROM Iot WHERE channel_id = ?';
-                        db.query(deleteIotQuery, [channel_id], (iotErr) => {
-                            if (iotErr) {
+                        // Commit the transaction
+                        db.commit((commitErr) => {
+                            if (commitErr) {
                                 return db.rollback(() => {
-                                    res.status(500).json({ msg: "Error deleting IoT channel." });
+                                    res.status(500).json({ msg: "Transaction commit error." });
                                 });
                             }
-
-                            // Delete the fish data
-                            const deleteFishQuery = 'DELETE FROM Fishgroup WHERE id = ?';
-                            db.query(deleteFishQuery, [fish_id], (fishErr) => {
-                                if (fishErr) {
-                                    return db.rollback(() => {
-                                        res.status(500).json({ msg: "Error deleting fish data." });
-                                    });
-                                }
-
-                                // Commit the transaction
-                                db.commit((commitErr) => {
-                                    if (commitErr) {
-                                        return db.rollback(() => {
-                                            res.status(500).json({ msg: "Transaction commit error." });
-                                        });
-                                    }
-                                    res.status(200).json({ msg: "Pond and related data deleted successfully." });
-                                });
-                            });
+                            res.status(200).json({ msg: "Pond and related data deleted successfully." });
                         });
                     });
                 });
             });
         });
+    });
+}
+
+// DELETE Pond API
+app.delete('/delete-pond/:pondId', verifyToken, (req, res) => {
+    const userId = req.userId;
+    const pondId = req.params.pondId;
+
+    // Check if the pond belongs to the user
+    const verifyQuery = 'SELECT pond_id, channel_id, fish_id FROM Pond WHERE pond_id = ? AND user_id = ?';
+    db.query(verifyQuery, [pondId, userId], (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).json({ msg: "Database query error" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ msg: "Pond not found or does not belong to the user." });
+        }
+
+        const { channel_id, fish_id } = results[0];
+
+        // Call the deleteRecords function
+        deleteRecords(channel_id, fish_id, pondId, res);
     });
 });
 
