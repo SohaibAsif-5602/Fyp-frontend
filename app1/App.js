@@ -6,6 +6,9 @@ import { DarkModeProvider } from './contexts/DarkModeContext';
 
 import LoginScreen from './pages/loginscreen';
 import SignupScreen from "./pages/SignupScreen";
+import ForgotPassword from './pages/ForgotPasswordScreen';
+import ResetCodeVerificationScreen from './pages/ResetCodeVerificationScreen';
+import ResetPasswordScreen from "./pages/ResetPasswordScreen";
 import Subscription from "./pages/subscription";
 import UserDetails from "./pages/UserDetails";
 import AlertSettingsPage from './pages/alertsettingspage';
@@ -57,6 +60,9 @@ export default function App() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+        <Stack.Screen name="ResetCodeVerification" component={ResetCodeVerificationScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="Subscription" component={Subscription} />
         <Stack.Screen name="PondSetting" component={PondSetting} />
         <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />

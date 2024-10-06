@@ -86,9 +86,12 @@ const LoginScreen = () => {
             style={styles.usertextfield}
           />
         </View>
-        <View style={styles.forgottxtcontainer}>
-          <Text style={styles.txtforgot}>Forgot your password?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+        <View style={styles.txtdontcontainer}>
+        <Text style={styles.txtDont}>Forgot Password </Text>
+        <Text style={styles.txtcreate}>Click here</Text>
         </View>
+        </TouchableOpacity>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={Login}>
             <Text style={styles.buttonText}>Sign In</Text>
@@ -181,11 +184,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: 'black',
   },
-  forgottxtcontainer: {
-    marginTop: 10,
-    marginHorizontal: 40,
-    height: 30,
-  },
   txtforgot: {
     textAlign: 'right',
     fontSize: 17,
@@ -213,13 +211,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 80,
+    marginTop: 15,
     marginHorizontal: 40,
-    height: 30,
+    height: 20,
+  },
+  forgotPasswordText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 0,
+    marginHorizontal: 20,
+    height: 20,
   },
   txtDont: {
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 17,
     color: 'black',
     fontWeight: '500',
   },
