@@ -1,106 +1,37 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, Dimensions } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 const fishData = [
-    {
-      id: '1',
-      name: 'Catla',
-      image: require('../assets/Fish PICS/Catla.jpg'),
-      stats: {
-        temperature: '25 - 32°C',
-        pH: '6.5 - 8.0',
-        population: '50 - 100 individuals',
-        DO: '4 - 5 mg/L',
-      },
-      description: 'Freshwater fish, thrives in warm waters, polycultured with Rohu and Mrigal.',
+  {
+    id: '1',
+    name: 'Catla',
+    image: require('../assets/Fish_PICS/Catla.jpg'),
+    stats: {
+      temperature: '25 - 32°C',
+      pH: '6.5 - 8.0',
+      population: '50 - 100 individuals',
+      DO: '4 - 5 mg/L',
     },
-    {
-      id: '2',
-      name: 'Catfish',
-      image: require('../assets/Fish PICS/Catfish.jpg'),
-      stats: {
-        temperature: '22 - 28°C',
-        pH: '6.5 - 8.0',
-        population: '100 - 200 individuals',
-        DO: '2 - 5 mg/L',
-      },
-      description: 'Hardy species, tolerates low oxygen, often monocultured or with tilapia.',
+    description: 'Freshwater fish, thrives in warm waters, polycultured with Rohu and Mrigal.',
+  },
+  {
+    id: '2',
+    name: 'Catfish',
+    image: require('../assets/Fish_PICS/Catfish.jpg'),
+    stats: {
+      temperature: '22 - 28°C',
+      pH: '6.5 - 8.0',
+      population: '100 - 200 individuals',
+      DO: '2 - 5 mg/L',
     },
-    {
-      id: '3',
-      name: 'Cod',
-      image: require('../assets/Fish PICS/Cod.jpg'),
-      stats: {
-        temperature: '2 - 10°C',
-        pH: '7.0 - 8.5',
-        population: 'Varies',
-        DO: '5 - 7 mg/L',
-      },
-      description: 'Cold-water fish, farmed in sea cages, requires high oxygen levels.',
-    },
-    {
-      id: '4',
-      name: 'Grass Carp',
-      image: require('../assets/Fish PICS/GrassCarp.jpg'),
-      stats: {
-        temperature: '20 - 30°C',
-        pH: '6.5 - 8.5',
-        population: '50 - 150 individuals',
-        DO: '3 - 5 mg/L',
-      },
-      description: 'Herbivorous, controls aquatic vegetation, polycultured with Catla and Rohu.',
-    },
-    {
-      id: '5',
-      name: 'Milkfish',
-      image: require('../assets/Fish PICS/Milkfish.jpg'),
-      stats: {
-        temperature: '26 - 30°C',
-        pH: '7.0 - 8.5',
-        population: '50 - 200 individuals',
-        DO: '3 - 6 mg/L',
-      },
-      description: 'Popular in brackish water ponds, feeds on algae and small invertebrates.',
-    },
-    {
-      id: '6',
-      name: 'Salmon',
-      image: require('../assets/Fish PICS/Salmon.jpg'),
-      stats: {
-        temperature: '8 - 14°C',
-        pH: '6.5 - 8.0',
-        population: 'Varies',
-        DO: '6 - 8 mg/L',
-      },
-      description: 'Cold-water species, farmed in sea pens, requires high-quality, protein-rich feed.',
-    },
-    {
-      id: '7',
-      name: 'Tilapia',
-      image: require('../assets/Fish PICS/Tilapia.jpg'),
-      stats: {
-        temperature: '24 - 30°C',
-        pH: '6.0 - 9.0',
-        population: '100 - 300 individuals',
-        DO: '3 - 6 mg/L',
-      },
-      description: 'Fast-growing, tolerates various conditions, ideal for polyculture with catfish.',
-    },
-    {
-      id: '8',
-      name: 'Trout',
-      image: require('../assets/Fish PICS/Trout.jpg'),
-      stats: {
-        temperature: '10 - 16°C',
-        pH: '6.5 - 8.0',
-        population: '100 - 200 individuals',
-        DO: '7 - 9 mg/L',
-      },
-      description: 'Cold-water fish, prefers flowing water, grown in raceways or recirculating systems.',
-    },
-    // Add other fish data...
-  ];
-  
+    description: 'Hardy species, tolerates low oxygen, often monocultured or with tilapia.',
+  },
+  // Add other fish data...
+];
+
 const Logo = () => (
   <Image
     source={require('../assets/fish_logo.png')}
@@ -111,17 +42,24 @@ const Logo = () => (
 
 const FishGuidePage = () => {
   const renderFishItem = ({ item }) => (
-    <View style={styles.fishItem}>
+    <LinearGradient
+      colors={['#E0F7FA', '#B2EBF2']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.fishItem}
+    >
       <Image source={item.image} style={styles.fishImage} />
       <View style={styles.fishInfo}>
         <Text style={styles.fishName}>{item.name}</Text>
-        <Text style={styles.fishStats}>Optimal temperature: {item.stats.temperature}</Text>
-        <Text style={styles.fishStats}>Optimal pH: {item.stats.pH}</Text>
-        <Text style={styles.fishStats}>Optimal Population: {item.stats.population}</Text>
-        <Text style={styles.fishStats}>Optimal DO: {item.stats.DO}</Text>
+        <View style={styles.statsContainer}>
+          <Text style={styles.fishStats}>Temperature: {item.stats.temperature}</Text>
+          <Text style={styles.fishStats}>pH: {item.stats.pH}</Text>
+          <Text style={styles.fishStats}>Population: {item.stats.population}</Text>
+          <Text style={styles.fishStats}>DO: {item.stats.DO}</Text>
+        </View>
         <Text style={styles.fishDescription}>{item.description}</Text>
       </View>
-    </View>
+    </LinearGradient>
   );
 
   return (
@@ -150,71 +88,83 @@ const FishGuidePage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
   headerContainer: {
-    marginVertical:20,
     alignItems: 'center',
-    paddingVertical: 20,
-    backgroundColor: '#1a9a9a',
-    borderRadius:10,
+    paddingVertical: 30,
+    backgroundColor: '#1A9A9A',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   heading: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#000',
-    marginTop: 10,
+    color: '#FFFFFF',
   },
   subheading: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: 18,
+    color: '#E0F7FA',
     textAlign: 'center',
-    marginTop: 5,
-    paddingHorizontal: 20,
+    marginTop: 10,
+    paddingHorizontal: 30,
   },
   listContainer: {
     padding: 20,
   },
   fishItem: {
     flexDirection: 'row',
-    backgroundColor: '#e0f7fa',
-    borderRadius: 10,
+    backgroundColor: '#E0F7FA',
+    borderRadius: 15,
     marginBottom: 20,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   fishImage: {
-    width: 100,
-    height: 100,
-    margin: 10,
+    width: width * 0.4,
+    height: width * 0.4,
+    borderTopLeftRadius: 15,
+    borderBottomLeftRadius: 15,
   },
   fishInfo: {
     flex: 1,
-    padding: 10,
+    padding: 15,
+    justifyContent: 'center',
   },
   fishName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#005662',
+    color: '#00796B',
+    marginBottom: 10,
+  },
+  statsContainer: {
+    backgroundColor: '#B2EBF2',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
   },
   fishStats: {
-    fontSize: 14,
-    color: '#000',
+    fontSize: 16,
+    color: '#004D40',
     marginTop: 5,
   },
   fishDescription: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: 16,
+    color: '#004D40',
     marginTop: 10,
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 120,
+    height: 120,
   },
   footerContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 30,
   },
 });
 
-export default FishGuidePage;
+export default FishGuidePage;

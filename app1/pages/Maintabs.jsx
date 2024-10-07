@@ -12,8 +12,7 @@ import Subscription from "../pages/subscription";
 import UserDetails from "../pages/UserDetails";
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
-import FishGuidePage from '../pages/fishguide';
-
+import EditProfileScreen from './Editprofile';
 
 
 
@@ -108,11 +107,17 @@ function MainTabs() {
         component={AlertHistory}
         options={{ tabBarButton: () => null }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Fish Guide"
         component={FishGuidePage}
         options={{ tabBarButton: () => null }}
+      /> */}
+      <Tab.Screen
+        name="Edit Profile"
+        component={EditProfileScreen}
+        options={{ tabBarButton: () => null }}
       />
+      
     </Tab.Navigator>
   );
 }

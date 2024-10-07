@@ -17,7 +17,7 @@ const saltrounds = 10;
 const db = sql.createConnection({
     host: 'localhost',
     database: 'FYPDATABASE',
-    password: 'Sohaib210886sql',
+    password: '2003',
     user: 'root'
 });
 
@@ -694,8 +694,49 @@ app.delete('/delete-pond/:pondId', verifyToken, (req, res) => {
 });
 
 
+app.get('/api/user', verifyToken, (req, res) => {
+    const userId = req.userId; // Extracted from the token by verifyToken
+
+    const query = 'SELECT user_id, email, username, date_of_joining, imagelink, D_O_B, contact_no, gender FROM Users WHERE user_id = ?';
+    
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            return res.status(500).json({ msg: 'Database query error', error: err });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        res.status(200).json(result[0]);
+    });
+});
 
 
 
+app.put('/api/user', verifyToken, (req, res) => {
+    const userId = req.userId; // Extracted from the token by verifyToken
+    const { username, email, imagelink, D_O_B, contact_no, gender } = req.body;
 
+    const query = `
+        UPDATE Users 
+        SET username = ?, email = ?, imagelink = ?, D_O_B = ?, contact_no = ?, gender = ?
+        WHERE user_id = ?
+    `;
 
+    db.query(
+        query, 
+        [username, email, imagelink, D_O_B, contact_no, gender, userId], 
+        (err, result) => {
+            if (err) {
+                return res.status(500).json({ msg: 'Database update error', error: err });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ msg: 'User not found' });
+            }
+
+            res.status(200).json({ msg: 'User updated successfully' });
+        }
+    );
+});

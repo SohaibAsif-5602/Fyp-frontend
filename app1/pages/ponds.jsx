@@ -1,55 +1,56 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 import { FontAwesome5 } from '@expo/vector-icons';
-import Footer from '../components/footer';
 
 const PondList = () => {
   const navigation = useNavigation();
   const [ponds, setPonds] = useState([]);
 
-  useEffect(() => {
-    const fetchPonds = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          console.log('No token found. Redirecting to login.');
+  // Fetch ponds data whenever the component is focused
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPonds = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            console.log('No token found. Redirecting to login.');
+            navigation.navigate('Login');
+            return;
+          }
+
+          const response = await fetch(process.env.EXPO_PUBLIC_API_URL + '/getPonds', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          console.log('Response status of ponds:', response.status);
+
+          if (response.ok) {
+            const data = await response.json();
+            setPonds(data.ponds);
+          } else if (response.status === 401) {
+            console.error('Invalid token. Redirecting to login.');
+            await AsyncStorage.removeItem('token');
+            navigation.navigate('Login');
+          } else {
+            console.error('Failed to fetch ponds. Status:', response.status);
+            const errorData = await response.text();
+            console.error('Error details:', errorData);
+          }
+        } catch (error) {
+          console.error('Error fetching ponds data:', error.message);
           navigation.navigate('Login');
-          return;
         }
+      };
 
-        const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/getPonds', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log('Response status of ponds:', response.status);
-        
-
-        if (response.ok) {
-          const data = await response.json();
-          setPonds(data.ponds);
-        } else if (response.status === 401) {
-          console.error('Invalid token. Redirecting to login.');
-          await AsyncStorage.removeItem('token');
-          navigation.navigate('Login');
-        } else {
-          console.error('Failed to fetch ponds. Status:', response.status);
-          const errorData = await response.text();
-          console.error('Error details:', errorData);
-        }
-      } catch (error) {
-        console.error('Error fetching ponds data:', error.message);
-        navigation.navigate('Login');
-      }
-    };
-
-    fetchPonds();
-  }, []);
+      fetchPonds();
+    }, [navigation]) // Adding navigation as a dependency
+  );
 
   const handlePondClick = (pond) => {
     // Navigate to the Analytics screen and pass the pond_id as a parameter
