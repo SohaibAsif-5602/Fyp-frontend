@@ -17,7 +17,7 @@ const saltrounds = 10;
 const db = sql.createConnection({
     host: 'localhost',
     database: 'FYPDATABASE',
-    password: '2003',
+    password: 'Sohaib210886sql',
     user: 'root'
 });
 
@@ -26,8 +26,29 @@ db.connect((err) => {
     console.log("Connected to database");
 });
 
+const sendPushNotification = async () => {
+    const message = {
+        to: 'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]',
+        sound: 'default',
+        title: 'Test Notification',
+        body: 'This is a test notification',
+        data: { someData: 'goes here' },
+    };
 
+    await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+    });
+};
 
+app.post('/send-notification', (req, res) => {
+    sendPushNotification();
+    res.status(200).json({ msg: 'Notification sent successfully' });
+});
 app.post('/signup',(req,res)=>{
     const {email,password,username}=req.body;
     
