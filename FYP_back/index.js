@@ -26,15 +26,16 @@ db.connect((err) => {
     console.log("Connected to database");
 });
 
-const sendPushNotification = async () => {
+const sendPushNotification = async (userId, token, title, body) => {
     const message = {
-        to: 'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]',
+        to: token,
         sound: 'default',
-        title: 'Test Notification',
-        body: 'This is a test notification',
+        title: title,
+        body: body,
         data: { someData: 'goes here' },
     };
 
+    // Send push notification
     await fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
         headers: {
@@ -43,12 +44,52 @@ const sendPushNotification = async () => {
         },
         body: JSON.stringify(message),
     });
+
+    // Insert notification into the database
+    try {
+        await fetch('http://192.168.100.147:8080/api/notifications', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: userId,
+                notification_title: title,
+                notification_body: body,
+            }),
+        });
+    } catch (error) {
+        console.error('Error storing notification:', error);
+    }
 };
 
+app.post('/api/notifications', (req, res) => {
+    const { userId, notification_title, notification_body } = req.body;
+
+    if (!userId || !notification_title || !notification_body) {
+        return res.status(400).json({ msg: 'Please provide all required fields' });
+    }
+
+    const query = 'INSERT INTO notifications (user_id, notification_title, notification_body) VALUES (?, ?, ?)';
+    db.query(query, [userId, notification_title, notification_body], (err, result) => {
+        if (err) {
+            console.error('Error inserting notification:', err);
+            return res.status(500).json({ msg: 'Failed to store notification' });
+        }
+
+        res.status(201).json({ msg: 'Notification stored successfully', notification_id: result.insertId });
+    });
+});
+
 app.post('/send-notification', (req, res) => {
-    sendPushNotification();
+    sendPushNotification(18,'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]','Test1 Notification','This is a test notification');
     res.status(200).json({ msg: 'Notification sent successfully' });
 });
+
+
+
+
 app.post('/signup',(req,res)=>{
     const {email,password,username}=req.body;
     
@@ -760,4 +801,54 @@ app.put('/api/user', verifyToken, (req, res) => {
             res.status(200).json({ msg: 'User updated successfully' });
         }
     );
+});
+
+app.post('/api/store-notification-token', verifyToken, (req, res) => {
+    const { notification_token } = req.body;
+    const userId = req.userId;
+
+    if (!notification_token) {
+        return res.status(400).json({ msg: "Notification token is required" });
+    }
+
+    // Check if the token already exists in the database
+    const checkQuery = 'SELECT * FROM not_token_table WHERE user_id = ? AND notification_token = ?';
+    
+    db.query(checkQuery, [userId, notification_token], (err, results) => {
+        if (err) {
+            console.error('Error checking token in the database:', err);
+            return res.status(500).json({ msg: "Failed to check notification token" });
+        }
+
+        // If the token already exists, do not insert
+        if (results.length > 0) {
+            return res.status(200).json({ msg: "Notification token already exists" });
+        }
+
+        // If the token does not exist, insert it into the database
+        const insertQuery = 'INSERT INTO not_token_table (user_id, notification_token) VALUES (?, ?)';
+        db.query(insertQuery, [userId, notification_token], (err, result) => {
+            if (err) {
+                console.error('Error inserting token into the database:', err);
+                return res.status(500).json({ msg: "Failed to store notification token" });
+            }
+
+            res.status(201).json({ msg: "Notification token stored successfully", notification_id: result.insertId });
+        });
+    });
+});
+
+app.get('/api/notifications', verifyToken, (req, res) => {
+    const userId = req.userId; 
+
+    const query = 'SELECT notification_id, notification_title, notification_body, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC';
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching notifications:', err);
+            return res.status(500).json({ msg: 'Failed to fetch notifications' });
+        }
+
+        res.status(200).json(results);
+    });
 });

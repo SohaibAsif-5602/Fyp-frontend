@@ -13,6 +13,7 @@ import UserDetails from "../pages/UserDetails";
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
 import EditProfileScreen from './Editprofile';
+import NotificationScreen from './notifications';
 
 
 
@@ -63,6 +64,9 @@ function MainTabs() {
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
           }
+          else if (route.name === 'Notifications') {
+            iconName = focused ? 'notifications' : 'notifications-outline';
+          }
 
           return <Icon name={iconName} size={size} color={color} />;
         },
@@ -78,6 +82,8 @@ function MainTabs() {
     >
       <Tab.Screen name="Ponds" component={Ponds} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Notifications" component={NotificationScreen} />
+
       <Tab.Screen name="Settings" component={Setting} />
       
       

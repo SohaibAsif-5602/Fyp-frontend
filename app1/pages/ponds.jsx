@@ -161,14 +161,14 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#2980b9',
     paddingVertical: 15,
-    paddingHorizontal: 40,
+    paddingHorizontal: 10,
     borderRadius: 30,
     alignSelf: 'center',
     marginBottom: 20,
     elevation: 2,
     position: 'absolute',
     bottom: 20,
-    width: '80%',
+    width: '35%',
   },
   addText: {
     fontSize: 18,

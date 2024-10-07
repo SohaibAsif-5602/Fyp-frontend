@@ -82,43 +82,42 @@ const LoginScreen = () => {
 
   useEffect(() => {
     const initializeNotifications = async () => {
-        const storedPushToken = await AsyncStorage.getItem('pushToken');
-        console.log('Stored push token:', storedPushToken);
+      const storedPushToken = await AsyncStorage.getItem('pushToken');
+      console.log('Stored push token:', storedPushToken);
 
-        if (!storedPushToken) {
-            const token = await registerForPushNotificationsAsync();
-            if (token) {
-                setExpoPushToken(token);
-                console.log('Push token:', token);
-            } else {
-                console.log('Failed to get push token');
-            }
+      if (!storedPushToken) {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          setExpoPushToken(token);
+          console.log('Push token:', token);
         } else {
-            setExpoPushToken(storedPushToken);
+          console.log('Failed to get push token');
         }
+      } else {
+        setExpoPushToken(storedPushToken);
+      }
 
-        notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-            setAlertMessage('Notification received!');
-            setModalVisible(true);
-        });
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        setAlertMessage('Notification received!');
+        setModalVisible(true);
+      });
 
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-            console.log(response);
-        });
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log(response);
+      });
     };
 
     initializeNotifications();
 
     return () => {
-        if (notificationListener.current) {
-            Notifications.removeNotificationSubscription(notificationListener.current);
-        }
-        if (responseListener.current) {
-            Notifications.removeNotificationSubscription(responseListener.current);
-        }
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
     };
-}, []);
-
+  }, []);
 
   const Login = async () => {
     if (!email || !password) {
@@ -136,6 +135,25 @@ const LoginScreen = () => {
       if (response.status === 200) {
         await AsyncStorage.setItem('token', response.data.token);
         setAlertMessage("Login successful!");
+
+        // Get the latest push token
+        const token = expoPushToken || await AsyncStorage.getItem('pushToken');
+
+        if (token) {
+          // Store the push token in the database
+          const authToken = response.data.token;
+          await axios.post(
+            process.env.EXPO_PUBLIC_API_URL + '/api/store-notification-token',
+            { notification_token: token },
+            {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        }
+
         setModalVisible(true);
         setTimeout(() => {
           setModalVisible(false);
@@ -315,26 +333,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 40,
     height: 20,
   },
-  forgotPasswordText: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 0,
-    marginHorizontal: 20,
-    height: 20,
-  },
-  txtDont: {
-    textAlign: 'center',
-    fontSize: 17,
-    color: 'black',
-    fontWeight: '500',
-  },
-  txtcreate: {
-    textAlign: 'center',
-    fontSize: 19,
-    color: 'purple',
-    fontWeight: '500',
-  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -366,4 +364,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

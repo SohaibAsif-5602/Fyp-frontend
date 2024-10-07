@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import ProfileImage from '../assets/me.jpg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import ProfileImage from '../assets/profile.jpeg';
 import axios from 'axios'; // Import axios for API calls
 
 const ProfileScreen = () => {
@@ -32,7 +32,8 @@ const ProfileScreen = () => {
           },
         });
         
-        setUserData(response.data); // Assuming the API returns user data directly
+        setUserData(response.data);
+        console.log(response.data) // Assuming the API returns user data directly
       } catch (error) {
         console.error('Error fetching user data:', error);
         Alert.alert('Error', 'Failed to fetch user data');
@@ -53,7 +54,10 @@ const ProfileScreen = () => {
       {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
-          source={userData.imagelink ? { uri: userData.imagelink } : ProfileImage} // Use fetched image link or a default one
+           source={userData.imagelink && userData.imagelink.startsWith('http') 
+            ? { uri: userData.imagelink } 
+            : require('../assets/profile.jpeg')
+          } 
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
