@@ -1,21 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
 import { LineChart } from 'react-native-chart-kit';
 import RNPickerSelect from 'react-native-picker-select';
-import { useNavigation, useRoute } from '@react-navigation/native'; // Import useRoute
+import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import SpinningImageLoader from '../contexts/SpinningImageLoader'; // Import SpinningImageLoader
+
 export default function Analytics() {
   const navigation = useNavigation();
-  const route = useRoute(); // Use useRoute to get parameters
-  const pondId = route.params?.pondId; // Get the pondId passed from the previous screen
+  const route = useRoute();
+  const pondId = route.params?.pondId;
+  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
 
   const [temperatureData, setTemperatureData] = useState([]);
   const [phData, setPhData] = useState([]);
@@ -38,9 +41,9 @@ export default function Analytics() {
           return;
         }
 
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+`/getPondData/${pondId}`, {
+        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + `/getPondData/${pondId}`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -64,10 +67,41 @@ export default function Analytics() {
     };
 
     if (pondId) {
-      fetchPondData(); // Only fetch data if pondId is available
+      fetchPondData(); 
     }
   }, [pondId]);
 
+<<<<<<< Updated upstream
+=======
+  const deletePond = async () => {
+    console.log('Deleting pond:', pondId);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      const response = await axios.delete(`${process.env.EXPO_PUBLIC_API_URL}/delete-pond/${pondId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Pond deleted successfully.');
+        navigation.navigate('Ponds'); 
+      } else {
+        console.error('Failed to delete the pond. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error deleting pond:', error.message);
+    }
+  };
+
+>>>>>>> Stashed changes
   useEffect(() => {
     let dataToFilter = [];
     if (selectedChart === 'Temperature') {
@@ -90,11 +124,20 @@ export default function Analytics() {
     const values = data.map(item => item.value);
   
     return (
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{title}</Text>
-        {loading || data.length === 0 ? ( // Check if data is empty
-          <View style={styles.skeletonGraph}>
-            <Text style={styles.noDataText}>No Data Available</Text>
+      <View style={[styles.chartContainer, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+        <Text style={[styles.chartTitle, isDarkMode ? styles.darkText : styles.lightText]}>{title}</Text>
+        {loading ? (
+          <View style={styles.loaderContainer}>
+            {/* Replace ActivityIndicator with SpinningImageLoader */}
+            <SpinningImageLoader 
+              source={require('../assets/fish_logo.png')} // Use your custom loader image
+              size={50} // Adjust the size as needed
+              duration={2000} // Customize the animation duration if needed
+            />
+          </View>
+        ) : data.length === 0 ? (
+          <View style={[styles.skeletonGraph, isDarkMode ? styles.darkSkeleton : styles.lightSkeleton]}>
+            <Text style={[styles.noDataText, isDarkMode ? styles.darkText : styles.lightText]}>No Data Available</Text>
           </View>
         ) : (
           <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }}>
@@ -108,9 +151,9 @@ export default function Analytics() {
               yAxisLabel=""
               yAxisSuffix=""
               chartConfig={{
-                backgroundColor: '#007bff',
-                backgroundGradientFrom: '#6ec1e4',
-                backgroundGradientTo: '#007bff',
+                backgroundColor: isDarkMode ? '#333' : '#007bff',
+                backgroundGradientFrom: isDarkMode ? '#555' : '#6ec1e4',
+                backgroundGradientTo: isDarkMode ? '#222' : '#007bff',
                 decimalPlaces: 2,
                 color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -129,12 +172,9 @@ export default function Analytics() {
       </View>
     );
   };
-  
-  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
       <ScrollView>
-        {/* Picker container to hold both pickers in a row */}
         <View style={styles.pickerContainer}>
           <RNPickerSelect
             onValueChange={(value) => setSelectedChart(value)}
@@ -143,7 +183,7 @@ export default function Analytics() {
               { label: 'pH', value: 'pH' },
               { label: 'Turbidity', value: 'Turbidity' },
             ]}
-            style={pickerSelectStyles}
+            style={pickerSelectStyles(isDarkMode)}
             placeholder={{ label: 'Select Chart', value: 'Temperature' }}
           />
           <RNPickerSelect
@@ -152,32 +192,35 @@ export default function Analytics() {
               { label: 'All Dates', value: 'All Dates' },
               ...dates.map(date => ({ label: date, value: date })),
             ]}
-            style={pickerSelectStyles}
+            style={pickerSelectStyles(isDarkMode)}
             placeholder={{ label: 'Select Date', value: 'All Dates' }}
           />
         </View>
 
-        {/* Render the chart container */}
         {selectedChart === 'Temperature' && renderChart(filteredData, 'TEMPERATURE CHART')}
         {selectedChart === 'pH' && renderChart(filteredData, 'PH CHART')}
         {selectedChart === 'Turbidity' && renderChart(filteredData, 'TURBIDITY CHART')}
 
-        <Text style={styles.fishHealth}>
+        <Text style={[styles.fishHealth, isDarkMode ? styles.darkFishHealth : styles.lightFishHealth]}>
           Fish Health - <Text style={styles.fishHealthValue}>{fishHealth}%</Text> Okay
         </Text>
 
-        <View style={styles.suggestionsContainer}>
-          <Text style={styles.suggestionsHeader}>Suggestions</Text>
+        <View style={[styles.suggestionsContainer, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+          <Text style={[styles.suggestionsHeader, isDarkMode ? styles.darkText : styles.lightText]}>Suggestions</Text>
           {suggestions.map((suggestion, index) => (
-            <Text key={index} style={styles.suggestionItem}>• {suggestion}</Text>
+            <Text key={index} style={[styles.suggestionItem, isDarkMode ? styles.darkText : styles.lightText]}>• {suggestion}</Text>
           ))}
         </View>
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlertHistory')}>
+          <TouchableOpacity style={[styles.button, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={() => navigation.navigate('AlertHistory')}>
             <Text style={styles.buttonText}>View Alerts History</Text>
           </TouchableOpacity>
+<<<<<<< Updated upstream
           <TouchableOpacity style={styles.deleteButton} onPress={() => console.log('Delete Pond')}>
+=======
+          <TouchableOpacity style={[styles.deleteButton, isDarkMode ? styles.darkDeleteButton : styles.lightDeleteButton]} onPress={deletePond}>
+>>>>>>> Stashed changes
             <Text style={styles.buttonText}>Delete Pond</Text>
           </TouchableOpacity>
         </View>
@@ -186,12 +229,21 @@ export default function Analytics() {
   );
 }
 
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  lightContainer: {
     backgroundColor: '#f0f8ff',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 220, // Adjust to match chart height
   },
   pickerContainer: {
     flexDirection: 'row',
@@ -201,7 +253,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   chartContainer: {
-    backgroundColor: '#ffffff',
     borderRadius: 15,
     padding: 15,
     marginHorizontal: 20,
@@ -212,33 +263,51 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     marginTop: 10,
   },
+  lightContainer: {
+    backgroundColor: '#ffffff',
+  },
+  darkContainer: {
+    backgroundColor: '#000',
+  },
   chartTitle: {
     fontSize: 24,
     marginTop: 10,
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  lightText: {
     color: '#007bff',
   },
-  chart: {
-    marginTop: 20,
-    borderRadius: 16,
+  darkText: {
+    color: '#fff',
   },
   skeletonGraph: {
     height: 220,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#e0e0e0',
     borderRadius: 16,
+  },
+  lightSkeleton: {
+    backgroundColor: '#e0e0e0',
+  },
+  darkSkeleton: {
+    backgroundColor: '#333',
   },
   fishHealth: {
     borderRadius: 20,
     width: '90%',
     marginLeft: '5%',
-    backgroundColor: '#007bff',
     fontSize: 26,
     textAlign: 'center',
     marginVertical: 10,
     paddingVertical: 20,
+  },
+  lightFishHealth: {
+    backgroundColor: '#007bff',
+    color: '#fff',
+  },
+  darkFishHealth: {
+    backgroundColor: '#444',
     color: '#fff',
   },
   fishHealthValue: {
@@ -249,7 +318,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     width: '90%',
     marginLeft: '5%',
-    backgroundColor: '#e6ffe6',
     padding: 15,
     marginVertical: 10,
   },
@@ -257,11 +325,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 24,
     marginBottom: 10,
-    color: '#2c3e50',
   },
   suggestionItem: {
     fontSize: 18,
-    color: '#333',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -269,16 +335,26 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   button: {
-    backgroundColor: '#007bff',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 30,
   },
+  lightButton: {
+    backgroundColor: '#007bff',
+  },
+  darkButton: {
+    backgroundColor: '#00bcd5',
+  },
   deleteButton: {
-    backgroundColor: '#ff3300',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 30,
+  },
+  lightDeleteButton: {
+    backgroundColor: '#ff3300',
+  },
+  darkDeleteButton: {
+    backgroundColor: '#ff4444',
   },
   buttonText: {
     color: '#fff',
@@ -288,19 +364,20 @@ const styles = StyleSheet.create({
   },
 });
 
-const pickerSelectStyles = StyleSheet.create({
-  inputAndroid: {
-    fontSize: 16,
-    width:150,
-    borderRadius:200,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'black',
-    borderRadius: 10,
-    color: 'black',
-    paddingRight: 30,
-    backgroundColor: '#e0f7fa',
-    marginHorizontal: 5,
-  },
-});
+const pickerSelectStyles = (isDarkMode) =>
+  StyleSheet.create({
+    inputAndroid: {
+      fontSize: 16,
+      width: 150,
+      borderRadius: 200,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: 'black',
+      borderRadius: 10,
+      color: isDarkMode ? '#fff' : 'black',
+      paddingRight: 30,
+      backgroundColor: isDarkMode ? '#333' : '#e0f7fa',
+      marginHorizontal: 5,
+    },
+  });

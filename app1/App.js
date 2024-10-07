@@ -9,10 +9,6 @@ import SignupScreen from "./pages/SignupScreen";
 import ForgotPassword from './pages/ForgotPasswordScreen';
 import ResetCodeVerificationScreen from './pages/ResetCodeVerificationScreen';
 import ResetPasswordScreen from "./pages/ResetPasswordScreen";
-import Subscription from "./pages/subscription";
-import UserDetails from "./pages/UserDetails";
-import AlertSettingsPage from './pages/alertsettingspage';
-import PondSetting from './pages/pondsetting';
 import SplashScreen from './pages/splashscreen';
 import MainTabs from './pages/Maintabs';
 import CodeVerificationScreen from './pages/VerificationEntry';
@@ -63,10 +59,6 @@ export default function App() {
         <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
         <Stack.Screen name="ResetCodeVerification" component={ResetCodeVerificationScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-        <Stack.Screen name="Subscription" component={Subscription} />
-        <Stack.Screen name="PondSetting" component={PondSetting} />
-        <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
-        <Stack.Screen name="UserDetails" component={UserDetails} />
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="CodeVerification" component={CodeVerificationScreen} />
 

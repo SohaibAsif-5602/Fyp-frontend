@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import axios from 'axios';
+import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import SpinningImageLoader from '../contexts/SpinningImageLoader'; // Import SpinningImageLoader
 
 const temperatureIcon = require('../assets/high-temperature.png');
 const lowtemperatureIcon = require('../assets/low-temperature.png');
@@ -9,7 +11,6 @@ const lowphIcon = require('../assets/ph-low.png');
 const dissolvedOxygenIcon = require('../assets/oxygen-tank.png');
 const lowdissolvedOxygenIcon = require('../assets/medical.png');
 
-// Custom Checkbox component
 const Checkbox = ({ value, onValueChange, label }) => (
   <TouchableOpacity style={styles.checkboxContainer} onPress={() => onValueChange(!value)}>
     <View style={[styles.checkbox, value && styles.checkboxChecked]}>
@@ -26,7 +27,7 @@ export default function AlertHistory() {
   const [lowestPh, setLowestPh] = useState(null);
   const [highestDissolvedOxygen, setHighestDissolvedOxygen] = useState(null);
   const [lowestDissolvedOxygen, setLowestDissolvedOxygen] = useState(null);
-  
+
   const [showHighTemp, setShowHighTemp] = useState(true);
   const [showLowTemp, setShowLowTemp] = useState(true);
   const [showHighPh, setShowHighPh] = useState(true);
@@ -35,16 +36,17 @@ export default function AlertHistory() {
   const [showLowDO, setShowLowDO] = useState(true);
   const [showAll, setShowAll] = useState(true);
 
-  // State to toggle dropdown visibility
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = () => {
-    const channelID = '2592426';
-    const apiKey = '45H5S1N645GKKUCB';
+    const channelID = '2685640';
+    const apiKey = '6N08XQ90NUC1B1NH';
     const url = `https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${apiKey}&results=100`;
 
     axios.get(url)
@@ -53,15 +55,15 @@ export default function AlertHistory() {
 
         const temperatures = feeds.map(feed => ({
           date: feed.created_at.split('T')[0],
-          value: parseFloat(feed.field1)
+          value: parseFloat(feed.field1),
         }));
         const phValues = feeds.map(feed => ({
           date: feed.created_at.split('T')[0],
-          value: parseFloat(feed.field2)
+          value: parseFloat(feed.field2),
         }));
         const dissolvedOxygenValues = feeds.map(feed => ({
           date: feed.created_at.split('T')[0],
-          value: parseFloat(feed.field3)
+          value: parseFloat(feed.field3),
         }));
 
         const maxTemperature = temperatures.reduce((max, item) => (item.value > max.value ? item : max), temperatures[0]);
@@ -79,9 +81,11 @@ export default function AlertHistory() {
         setLowestPh(minPh);
         setHighestDissolvedOxygen(maxDissolvedOxygen);
         setLowestDissolvedOxygen(minDissolvedOxygen);
+        setLoading(false); // Stop loading when data is fetched
       })
       .catch(error => {
-        console.error("Error fetching data from ThingSpeak:", error);
+        console.error('Error fetching data from ThingSpeak:', error);
+        setLoading(false); // Stop loading in case of an error
       });
   };
 
@@ -95,56 +99,63 @@ export default function AlertHistory() {
     setShowLowDO(value);
   };
 
-  const handleSave = () => {
-    console.log('Save button pressed');
-  };
-
   const renderAlertItem = (title, data, icon, show) => {
     if (!show || !data) return null;
     return (
-      <View style={styles.alertContainer}>
-        <Text style={styles.alertHeader}>{title}:</Text>
+      <View style={[styles.alertContainer, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+        <Text style={[styles.alertHeader, isDarkMode ? styles.darkText : styles.lightText]}>{title}:</Text>
         <View style={styles.alertItem}>
           <Image source={icon} style={styles.icon} />
-          <Text style={styles.alertText}>{data.date}: {data.value}</Text>
+          <Text style={[styles.alertText, isDarkMode ? styles.darkText : styles.lightText]}>{data.date}: {data.value}</Text>
         </View>
       </View>
     );
   };
 
-  return (
-    <ScrollView style={styles.container}>
+  if (loading) {
+    // Display the loader while fetching data
+    return (
+      <View style={[styles.container, styles.loaderContainer]}>
+        <SpinningImageLoader 
+          source={require('../assets/fish_logo.png')} // Replace with your loader image
+          size={50} 
+          duration={2000} 
+        />
+      </View>
+    );
+  }
 
-      {/* Dropdown Section */}
-      <TouchableOpacity style={styles.dropdownButton} onPress={() => setDropdownOpen(!dropdownOpen)}>
+  return (
+    <ScrollView style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+      <TouchableOpacity style={[styles.dropdownButton, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={() => setDropdownOpen(!dropdownOpen)}>
         <Text style={styles.dropdownButtonText}>Filter</Text>
       </TouchableOpacity>
 
       {dropdownOpen && (
-        <View style={styles.checkboxList}>
+        <View style={[styles.checkboxList, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
           <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>Temperature</Text>
+            <Text style={[styles.parameterLabel, isDarkMode ? styles.darkText : styles.lightText]}>Temperature</Text>
             <View style={styles.checkboxGroup}>
               <Checkbox value={showHighTemp} onValueChange={setShowHighTemp} label="High" />
               <Checkbox value={showLowTemp} onValueChange={setShowLowTemp} label="Low" />
             </View>
           </View>
           <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>pH</Text>
+            <Text style={[styles.parameterLabel, isDarkMode ? styles.darkText : styles.lightText]}>pH</Text>
             <View style={styles.checkboxGroup}>
               <Checkbox value={showHighPh} onValueChange={setShowHighPh} label="High" />
               <Checkbox value={showLowPh} onValueChange={setShowLowPh} label="Low" />
             </View>
           </View>
           <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>DO</Text>
+            <Text style={[styles.parameterLabel, isDarkMode ? styles.darkText : styles.lightText]}>DO</Text>
             <View style={styles.checkboxGroup}>
               <Checkbox value={showHighDO} onValueChange={setShowHighDO} label="High" />
               <Checkbox value={showLowDO} onValueChange={setShowLowDO} label="Low" />
             </View>
           </View>
           <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>All</Text>
+            <Text style={[styles.parameterLabel, isDarkMode ? styles.darkText : styles.lightText]}>All</Text>
             <View style={styles.checkboxGroup}>
               <Checkbox value={showAll} onValueChange={handleAllChange} label="" />
             </View>
@@ -152,12 +163,12 @@ export default function AlertHistory() {
         </View>
       )}
 
-      {renderAlertItem("Highest Temperature", highestTemperature, temperatureIcon, showHighTemp)}
-      {renderAlertItem("Lowest Temperature", lowestTemperature, lowtemperatureIcon, showLowTemp)}
-      {renderAlertItem("Highest pH", highestPh, phIcon, showHighPh)}
-      {renderAlertItem("Lowest pH", lowestPh, lowphIcon, showLowPh)}
-      {renderAlertItem("Highest Dissolved Oxygen", highestDissolvedOxygen, dissolvedOxygenIcon, showHighDO)}
-      {renderAlertItem("Lowest Dissolved Oxygen", lowestDissolvedOxygen, lowdissolvedOxygenIcon, showLowDO)}
+      {renderAlertItem('Highest Temperature', highestTemperature, temperatureIcon, showHighTemp)}
+      {renderAlertItem('Lowest Temperature', lowestTemperature, lowtemperatureIcon, showLowTemp)}
+      {renderAlertItem('Highest pH', highestPh, phIcon, showHighPh)}
+      {renderAlertItem('Lowest pH', lowestPh, lowphIcon, showLowPh)}
+      {renderAlertItem('Highest Dissolved Oxygen', highestDissolvedOxygen, dissolvedOxygenIcon, showHighDO)}
+      {renderAlertItem('Lowest Dissolved Oxygen', lowestDissolvedOxygen, lowdissolvedOxygenIcon, showLowDO)}
     </ScrollView>
   );
 }
@@ -166,23 +177,32 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     flex: 1,
-    backgroundColor: '#f2f2f2',
     padding: 20,
   },
-  pageHeader: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 15,
+  lightContainer: {
+    backgroundColor: '#f2f2f2',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 220, // Adjust to match chart height
   },
   dropdownButton: {
-    backgroundColor: 'green',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 10,
-    width:100
+    width: 100,
+  },
+  lightButton: {
+    backgroundColor: '#00bcd5',
+  },
+  darkButton: {
+    backgroundColor: '#00bcd5',
   },
   dropdownButtonText: {
     color: 'white',
@@ -190,7 +210,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   checkboxList: {
-    backgroundColor: 'white',
     borderRadius: 8,
     padding: 10,
     marginBottom: 20,
@@ -204,6 +223,12 @@ const styles = StyleSheet.create({
   parameterLabel: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  lightText: {
+    color: '#333',
   },
   checkboxGroup: {
     flexDirection: 'row',
@@ -231,23 +256,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   checkboxLabel: {
+    color: '#000',
     marginLeft: 8,
     fontSize: 16,
   },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   alertContainer: {
-    backgroundColor: 'white',
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,

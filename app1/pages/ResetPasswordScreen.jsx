@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
+import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
 
 const ResetPasswordScreen = ({ route, navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const { email, code } = route.params;
+  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
 
   const handleResetPassword = async () => {
     if (newPassword !== confirmPassword) {
@@ -34,23 +36,25 @@ const ResetPasswordScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reset Password</Text>
+    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+      <Text style={[styles.title, isDarkMode ? styles.darkText : styles.lightText]}>Reset Password</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, isDarkMode ? styles.darkInput : styles.lightInput]}
         placeholder="New Password"
+        placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
         value={newPassword}
         onChangeText={setNewPassword}
         secureTextEntry
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, isDarkMode ? styles.darkInput : styles.lightInput]}
         placeholder="Confirm New Password"
+        placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+      <TouchableOpacity style={[styles.button, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={handleResetPassword}>
         <Text style={styles.buttonText}>Reset Password</Text>
       </TouchableOpacity>
     </View>
@@ -63,31 +67,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  lightContainer: {
     backgroundColor: '#f2f2f2',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
-    color: 'purple',
+  },
+  lightText: {
+    color: '#00bcd5',
+  },
+  darkText: {
+    color: '#fff',
   },
   input: {
     width: '100%',
     height: 50,
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 15,
     fontSize: 16,
+  },
+  lightInput: {
     backgroundColor: '#fff',
+    borderColor: '#ccc',
+  },
+  darkInput: {
+    backgroundColor: '#1e1e1e',
+    borderColor: '#555',
+    color: '#fff',
   },
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: 'purple',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
+  },
+  lightButton: {
+    backgroundColor: '#00bcd5',
+  },
+  darkButton: {
+    backgroundColor: '#00bcd5',
   },
   buttonText: {
     color: '#fff',

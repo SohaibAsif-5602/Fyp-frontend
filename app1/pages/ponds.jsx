@@ -1,13 +1,23 @@
+<<<<<<< Updated upstream
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Footer from '../components/footer';
+=======
+import React, { useState, useCallback, useContext } from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { DarkModeContext } from '../contexts/DarkModeContext'; // Assuming you have a DarkModeContext
+>>>>>>> Stashed changes
 
 const PondList = () => {
   const navigation = useNavigation();
   const [ponds, setPonds] = useState([]);
+  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode context
 
   useEffect(() => {
     const fetchPonds = async () => {
@@ -19,6 +29,7 @@ const PondList = () => {
           return;
         }
 
+<<<<<<< Updated upstream
         const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/getPonds', {
           method: 'GET',
           headers: {
@@ -49,6 +60,11 @@ const PondList = () => {
 
     fetchPonds();
   }, []);
+=======
+      fetchPonds();
+    }, [navigation])
+  );
+>>>>>>> Stashed changes
 
   const handlePondClick = (pond) => {
     // Navigate to the Analytics screen and pass the pond_id as a parameter
@@ -56,28 +72,28 @@ const PondList = () => {
   };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, isDarkMode ? styles.darkWrapper : styles.lightWrapper]}>
       <ScrollView contentContainerStyle={styles.pondList}>
         {ponds.map((pond, index) => (
-          <View key={index} style={styles.pondCard}>
+          <View key={index} style={[styles.pondCard, isDarkMode ? styles.darkCard : styles.lightCard]}>
             <TouchableOpacity style={styles.pondContent} onPress={() => handlePondClick(pond)}>
               <View style={styles.imgcontainer}>
                 <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
               </View>
               <View style={styles.pondDetails}>
-                <Text style={styles.city}>{pond.pond_name}</Text>
-                <Text style={styles.fish}>{pond.pond_loc}</Text>
-                <Text style={styles.fish}>{pond.specie}</Text>
-                <Text style={styles.health}>Health: {pond.pond_score}%</Text>
+                <Text style={[styles.city, isDarkMode ? styles.darkText : styles.lightText]}>{pond.pond_name}</Text>
+                <Text style={[styles.fish, isDarkMode ? styles.darkText : styles.lightText]}>{pond.pond_loc}</Text>
+                <Text style={[styles.fish, isDarkMode ? styles.darkText : styles.lightText]}>{pond.specie}</Text>
+                <Text style={[styles.health, isDarkMode ? styles.darkText : styles.lightText]}>Health: {pond.pond_score}%</Text>
                 {pond.pond_score < 50 && <Text style={styles.warning}>⚠️ Health Warning</Text>}
               </View>
             </TouchableOpacity>
-            <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
+            <FontAwesome5 name="ellipsis-v" size={24} color={isDarkMode ? "#fff" : "#000"} style={styles.browseIcon} />
           </View>
         ))}
       </ScrollView>
 
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddPond')}>
+      <TouchableOpacity style={[styles.addButton, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={() => navigation.navigate('AddPond')}>
         <Text style={styles.addText}>+ Add Pond</Text>
       </TouchableOpacity>
     </View>
@@ -87,7 +103,12 @@ const PondList = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
+  },
+  lightWrapper: {
     backgroundColor: '#f0f4f8',
+  },
+  darkWrapper: {
+    backgroundColor: '#000',
   },
   imgcontainer: {
     height: 'auto',
@@ -101,16 +122,22 @@ const styles = StyleSheet.create({
   pondCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 3,
-    shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 10,
     marginBottom: 20,
     width: '90%',
     overflow: 'hidden',
     padding: 10,
+  },
+  lightCard: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+  },
+  darkCard: {
+    backgroundColor: '#1e1e1e',
+    shadowColor: '#fff',
   },
   browseIcon: {
     marginLeft: 5,
@@ -137,18 +164,15 @@ const styles = StyleSheet.create({
   city: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2c3e50',
     marginBottom: 5,
   },
   fish: {
     fontSize: 16,
-    color: '#34495e',
     marginBottom: 5,
   },
   health: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#27ae60',
   },
   warning: {
     marginTop: 5,
@@ -156,8 +180,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e74c3c',
   },
+  lightText: {
+    color: '#2c3e50',
+  },
+  darkText: {
+    color: '#fff',
+  },
   addButton: {
-    backgroundColor: '#2980b9',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
@@ -167,6 +196,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     width: '80%',
+  },
+  lightButton: {
+    backgroundColor: '#00bcd5',
+  },
+  darkButton: {
+    backgroundColor: '#00bcd5',
   },
   addText: {
     fontSize: 18,

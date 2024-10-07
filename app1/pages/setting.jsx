@@ -19,9 +19,14 @@ const Setting = () => {
 
   const toggleDarkMode = () => setIsDarkMode((prevState) => !prevState);
   const toggleAutoAction = () => {
-    setIsModalVisible(true); // Show modal when the switch is toggled
+    if (areAlertsEnabled) {
+      // Show modal only when turning off the auto-action
+      setIsModalVisible(true);
+    } else {
+      // If auto-action is being turned on, simply enable it without showing the modal
+      setAreAlertsEnabled(true);
+    }
   };
-
   const viewAlertSettingsPage = () => {
     navigation.navigate('AlertSettingsPage');
   };
@@ -42,7 +47,6 @@ const Setting = () => {
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-
       <View style={styles.option}>
         <Text style={[styles.text, isDarkMode && styles.darkText]}>Dark Mode</Text>
         <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
@@ -56,18 +60,6 @@ const Setting = () => {
       <View style={styles.option}>
         <TouchableOpacity style={styles.button} onPress={view_fish_guide}>
           <Text style={[styles.text, isDarkMode && styles.darkText]}>Fish Guide</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Help Center</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Learn More about Machiro</Text>
         </TouchableOpacity>
       </View>
 
@@ -104,30 +96,16 @@ const Setting = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '100%',
     flex: 1,
     backgroundColor: '#fff',
-    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   darkContainer: {
     backgroundColor: '#000',
   },
-  headertext: {
-    paddingVertical: 17,
-    backgroundColor: '#00bcd4',
-    textAlign: 'center',
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  darkHeadertext: {
-    backgroundColor: '#000',
-  },
   text: {
-    paddingTop: 30,
-    fontSize: 20,
-    padding: 10,
+    fontSize: 18,
     color: '#000',
   },
   darkText: {
@@ -137,11 +115,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 10,
+    marginBottom: 30, // Reduced gap between buttons
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    paddingVertical: 150,
   },
   logo: {
     width: 200,
@@ -157,7 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 20,
     borderRadius: 10,
-    width: '90%',
+    width: '80%',
     alignItems: 'center',
   },
   darkModalContent: {
@@ -165,25 +143,21 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 18,
     marginBottom: 20,
+    textAlign: 'center',
   },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '30%',
-    marginLeft: 250,
+    justifyContent: 'space-around',
+    width: '60%',
   },
   modalButton: {
-    flex: 1,
     padding: 10,
-    marginHorizontal: 2,
-    backgroundColor: 'red',
+    backgroundColor: '#007BFF',
     borderRadius: 5,
     alignItems: 'center',
-  },
-  button: {
-    // Add any button-specific styles here if needed
+    marginHorizontal: 10,
   },
   buttonText: {
     color: '#fff',
