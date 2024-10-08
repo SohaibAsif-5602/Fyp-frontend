@@ -8,10 +8,10 @@ import Ponds from '../pages/ponds';
 import ProfileScreen from '../pages/profile';
 import Setting from '../pages/setting';
 import Analytics from "../pages/analytics";
-import Subscription from "../pages/subscription";
-import UserDetails from "../pages/UserDetails";
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
+
+import FishGuidePage from '../pages/fishguide';
 import EditProfileScreen from './Editprofile';
 import NotificationScreen from './notifications';
 
@@ -92,17 +92,7 @@ function MainTabs() {
         component={Analytics}
         options={{ tabBarButton: () => null }}
       />
-      <Tab.Screen
-
-        name="Subscription"
-        component={Subscription}
-        options={{ tabBarButton: () => null }}
-        />
-      <Tab.Screen
-        name="UserDetails"
-        component={UserDetails}
-        options={{ tabBarButton: () => null }}
-        />
+      
       <Tab.Screen
         name="AddPond"
         component={AddPond}
@@ -113,15 +103,17 @@ function MainTabs() {
         component={AlertHistory}
         options={{ tabBarButton: () => null }}
       />
-      {/* <Tab.Screen
+      <Tab.Screen
         name="Fish Guide"
         component={FishGuidePage}
         options={{ tabBarButton: () => null }}
-      /> */}
+
+      />
       <Tab.Screen
         name="Edit Profile"
         component={EditProfileScreen}
         options={{ tabBarButton: () => null }}
+
       />
       
     </Tab.Navigator>

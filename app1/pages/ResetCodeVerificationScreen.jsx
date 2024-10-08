@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
+import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
 
 const ResetCodeVerificationScreen = ({ route, navigation }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const { email } = route.params;
+  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
 
   const handleVerify = async () => {
     const verificationCode = code.join('');
@@ -38,22 +40,23 @@ const ResetCodeVerificationScreen = ({ route, navigation }) => {
   const inputs = [];
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Verify Reset Code</Text>
+    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+      <Text style={[styles.title, isDarkMode ? styles.darkText : styles.lightText]}>Verify Reset Code</Text>
       <View style={styles.inputContainer}>
         {code.map((_, index) => (
           <TextInput
             key={index}
-            style={styles.input}
+            style={[styles.input, isDarkMode ? styles.darkInput : styles.lightInput]}
             value={code[index]}
             onChangeText={(text) => handleChange(text, index)}
             keyboardType="numeric"
             maxLength={1}
             ref={(input) => inputs[index] = input}
+            placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
           />
         ))}
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleVerify}>
+      <TouchableOpacity style={[styles.button, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={handleVerify}>
         <Text style={styles.buttonText}>Verify Code</Text>
       </TouchableOpacity>
     </View>
@@ -66,12 +69,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  lightContainer: {
     backgroundColor: '#f2f2f2',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
-    color: 'purple',
+  },
+  lightText: {
+    color: '#00bcd5',
+  },
+  darkText: {
+    color: '#fff',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -83,19 +96,31 @@ const styles = StyleSheet.create({
     width: 40,
     height: 50,
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 5,
     textAlign: 'center',
     fontSize: 24,
+  },
+  lightInput: {
     backgroundColor: '#fff',
+    borderColor: '#ccc',
+  },
+  darkInput: {
+    backgroundColor: '#1e1e1e',
+    borderColor: '#555',
+    color: '#fff',
   },
   button: {
     width: '80%',
     height: 50,
-    backgroundColor: 'purple',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
+  },
+  lightButton: {
+    backgroundColor: '#00bcd5',
+  },
+  darkButton: {
+    backgroundColor: '#00bcd5',
   },
   buttonText: {
     color: '#fff',

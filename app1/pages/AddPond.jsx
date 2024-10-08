@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   darkAddButton: {
-    backgroundColor: '#1a8bbf',
+    backgroundColor: '#00bcd5',
   },
   addText: {
     fontSize: 18,
