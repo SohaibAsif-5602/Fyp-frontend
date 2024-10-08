@@ -1,127 +1,159 @@
-import React, { useContext } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { DarkModeContext } from '../contexts/DarkModeContext';
-import image from '../assets/me.jpg'
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import ProfileImage from '../assets/profile.jpeg';
+import axios from 'axios'; // Import axios for API calls
 
-export default function Profile() {
+const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { isDarkMode } = useContext(DarkModeContext);
+  const [userData, setUserData] = useState({
+    username: '',
+    email: '',
+    imagelink: '',
+    D_O_B: '',
+    contact_on: '',
+    gender: '',
+  });
 
-  const change_plan = () => {
-    navigation.navigate('Subscription');
-  };
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          navigation.navigate('Login');
+          return;
+        }
+
+        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+'/api/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        setUserData(response.data);
+        console.log(response.data) // Assuming the API returns user data directly
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        Alert.alert('Error', 'Failed to fetch user data');
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const logout = async () => {
-    await AsyncStorage.removeItem(token);
+    console.log('Logging out...');
+    await AsyncStorage.removeItem('token');
     navigation.navigate('Login');
   };
-
+  
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-     
-
+    <ScrollView style={styles.container}>
+      {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
-          source={image}
+           source={userData.imagelink && userData.imagelink.startsWith('http') 
+            ? { uri: userData.imagelink } 
+            : require('../assets/profile.jpeg')
+          } 
           style={styles.profileImage}
         />
-        <View style={styles.userDetails}>
-          <Text style={[styles.userName, isDarkMode && styles.darkText]}>Taha Shayan</Text>
-          <Text style={[styles.userEmail, isDarkMode && styles.darkText]}>taha@gmail.com</Text>
-        </View>
-      </View>
-
-      <View style={[styles.menu, isDarkMode && styles.darkMenu]}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('UserDetails')}
-        >
-          <Text style={[styles.menuText, isDarkMode && styles.darkText]}>User Details</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={change_plan}>
-          <Text style={[styles.menuText, isDarkMode && styles.darkText]}>Change Plan</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={logout}>
-          <Text style={[styles.menuText, isDarkMode && styles.darkText]}>Logout</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.menuItem, styles.deleteButton]}
-          onPress={() => {
-            /* Handle Delete Account */
-          }}
-        >
-          <Text style={styles.menuText}>Delete Account</Text>
+        <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
+        <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
+        <TouchableOpacity style={styles.editProfileButton} onPress={() => { navigation.navigate('Edit Profile'); }}>
+          <Text style={styles.editProfileText}>Edit Profile</Text>
         </TouchableOpacity>
       </View>
-    </View>
+
+      {/* Profile Options */}
+      <View style={styles.optionContainer}>
+        <View style={styles.divider} />
+
+        <TouchableOpacity style={styles.option} onPress={() => {}}>
+          <Icon name="trash-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Clear Cache</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.option} onPress={() => {}}>
+          <Icon name="time-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Clear History</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.option} onPress={logout}>
+          <Icon name="log-out-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Log Out</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+
+      {/* App Version */}
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     flex: 1,
     backgroundColor: '#fff',
-  },
-  darkContainer: {
-    backgroundColor: '#000',
-  },
-  darkText: {
-    color: '#fff',
+    padding: 16,
   },
   profileContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginBottom: 20,
   },
   profileImage: {
-    width: 210,
-    height: 210,
-    borderRadius: 110,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     marginBottom: 10,
   },
-  userDetails: {
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 24,
-    color: '#000',
-  },
-  userEmail: {
-    fontSize: 20,
-    color: '#666',
-  },
-  menu: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 60,
-    marginTop: 30,
-    gap:10
-  },
-  darkMenu: {
-    backgroundColor: '#333',
-  },
-  menuItem: {
-    paddingVertical: 10,
-    paddingHorizontal:10,
-    borderColor: '#000',
-    borderWidth: 2,
-    borderRadius: 5,
-    borderStyle: 'solid',
-  },
-  menuText: {
+  profileName: {
     fontSize: 18,
-    color: '#000',
+    fontWeight: 'bold',
   },
-  deleteButton: {
-    backgroundColor: 'red',
-    paddingVertical: 10,
+  profileEmail: {
+    color: '#555',
+    marginBottom: 10,
+  },
+  editProfileButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 6,
+    paddingHorizontal: 20,
     borderRadius: 5,
+  },
+  editProfileText: {
+    color: '#fff',
+  },
+  optionContainer: {
+    marginBottom: 20,
+  },
+  option: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 10,
+    flex: 1,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+  },
+  appVersion: {
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
   },
 });
+
+export default ProfileScreen;

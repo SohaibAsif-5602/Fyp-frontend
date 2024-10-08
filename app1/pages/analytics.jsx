@@ -68,6 +68,37 @@ export default function Analytics() {
     }
   }, [pondId]);
 
+  const deletePond = async () => {
+    console.log('Deleting pond:', pondId);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      const response = await axios.delete(`${process.env.EXPO_PUBLIC_API_URL}/delete-pond/${pondId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Pond deleted successfully.');
+        
+        navigation.navigate('Ponds'); 
+      } else {
+        console.error('Failed to delete the pond. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error deleting pond:', error.message);
+    }
+  };
+  
+
+
   useEffect(() => {
     let dataToFilter = [];
     if (selectedChart === 'Temperature') {
@@ -88,13 +119,13 @@ export default function Analytics() {
   const renderChart = (data, title) => {
     const labels = data.map(item => item.date);
     const values = data.map(item => item.value);
-
+  
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>{title}</Text>
-        {loading ? (
+        {loading || data.length === 0 ? ( // Check if data is empty
           <View style={styles.skeletonGraph}>
-            <ActivityIndicator size="large" color="#007bff" />
+            <Text style={styles.noDataText}>No Data Available</Text>
           </View>
         ) : (
           <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }}>
@@ -129,7 +160,8 @@ export default function Analytics() {
       </View>
     );
   };
-
+  
+  
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -176,7 +208,7 @@ export default function Analytics() {
           <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlertHistory')}>
             <Text style={styles.buttonText}>View Alerts History</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={() => console.log('Delete Pond')}>
+          <TouchableOpacity style={styles.deleteButton} onPress={deletePond}>
             <Text style={styles.buttonText}>Delete Pond</Text>
           </TouchableOpacity>
         </View>

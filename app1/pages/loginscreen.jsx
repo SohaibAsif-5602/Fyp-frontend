@@ -1,11 +1,74 @@
-import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal } from 'react-native';
-import React, { useState } from 'react';
+import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
-import { ImageBackground } from 'react-native';
-import background from '../assets/water1.jpeg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+async function registerForPushNotificationsAsync() {
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      alert('Permission not granted to get push token for push notification!');
+      return;
+    }
+
+    const storedPushToken = await AsyncStorage.getItem('pushToken');
+    if (storedPushToken) {
+      return storedPushToken;
+    }
+
+    const projectId =
+      Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    if (!projectId) {
+      alert('Project ID not found');
+      return;
+    }
+
+    try {
+      const pushTokenString = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId,
+        })
+      ).data;
+
+      await AsyncStorage.setItem('pushToken', pushTokenString);
+
+      return pushTokenString;
+    } catch (e) {
+      alert(`Error: ${e}`);
+    }
+  } else {
+    alert('Must use physical device for push notifications');
+  }
+}
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -13,9 +76,50 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      const storedPushToken = await AsyncStorage.getItem('pushToken');
+      console.log('Stored push token:', storedPushToken);
+
+      if (!storedPushToken) {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          setExpoPushToken(token);
+          console.log('Push token:', token);
+        } else {
+          console.log('Failed to get push token');
+        }
+      } else {
+        setExpoPushToken(storedPushToken);
+      }
+
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        setAlertMessage('Notification received!');
+        setModalVisible(true);
+      });
+
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log(response);
+      });
+    };
+
+    initializeNotifications();
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
 
   const Login = async () => {
-    console.log("clicked");
     if (!email || !password) {
       setAlertMessage("Please fill in all fields.");
       setModalVisible(true);
@@ -23,7 +127,7 @@ const LoginScreen = () => {
     }
 
     try {
-      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL+'/login', {
+      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/login', {
         email,
         password,
       });
@@ -31,22 +135,37 @@ const LoginScreen = () => {
       if (response.status === 200) {
         await AsyncStorage.setItem('token', response.data.token);
         setAlertMessage("Login successful!");
+
+        // Get the latest push token
+        const token = expoPushToken || await AsyncStorage.getItem('pushToken');
+
+        if (token) {
+          // Store the push token in the database
+          const authToken = response.data.token;
+          await axios.post(
+            process.env.EXPO_PUBLIC_API_URL + '/api/store-notification-token',
+            { notification_token: token },
+            {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        }
+
         setModalVisible(true);
         setTimeout(() => {
           setModalVisible(false);
-          navigation.navigate('MainTabs'); // Navigate to the main screen
-        }, 1500); // Optional delay to show the success message
+          navigation.navigate('MainTabs');
+        }, 1500);
       }
     } catch (error) {
-      // Handle different error scenarios
       if (error.response) {
-        // Server responded with a status other than 2xx
         setAlertMessage(`Error: ${error.response.data.message || error.response.data}`);
       } else if (error.request) {
-        // No response from the server
         setAlertMessage("Network error: Please check your internet connection and try again.");
       } else {
-        // Error occurred in setting up the request
         setAlertMessage(`Unexpected error: ${error.message}`);
       }
       setModalVisible(true);
@@ -86,9 +205,12 @@ const LoginScreen = () => {
             style={styles.usertextfield}
           />
         </View>
-        <View style={styles.forgottxtcontainer}>
-          <Text style={styles.txtforgot}>Forgot your password?</Text>
-        </View>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <View style={styles.txtdontcontainer}>
+            <Text style={styles.txtDont}>Forgot Password </Text>
+            <Text style={styles.txtcreate}>Click here</Text>
+          </View>
+        </TouchableOpacity>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={Login}>
             <Text style={styles.buttonText}>Sign In</Text>
@@ -102,7 +224,6 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
       
-      {/* Custom Alert Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -181,11 +302,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: 'black',
   },
-  forgottxtcontainer: {
-    marginTop: 10,
-    marginHorizontal: 40,
-    height: 30,
-  },
   txtforgot: {
     textAlign: 'right',
     fontSize: 17,
@@ -213,21 +329,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 80,
+    marginTop: 15,
     marginHorizontal: 40,
-    height: 30,
-  },
-  txtDont: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: 'black',
-    fontWeight: '500',
-  },
-  txtcreate: {
-    textAlign: 'center',
-    fontSize: 19,
-    color: 'purple',
-    fontWeight: '500',
+    height: 20,
   },
   modalOverlay: {
     flex: 1,
