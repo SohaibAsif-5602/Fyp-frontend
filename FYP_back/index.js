@@ -17,7 +17,7 @@ const saltrounds = 10;
 const db = sql.createConnection({
     host: 'localhost',
     database: 'FYPDATABASE',
-    password: '2003',
+    password: 'Sohaib210886sql',
     user: 'root'
 });
 
@@ -25,6 +25,68 @@ db.connect((err) => {
     if (err) throw err;
     console.log("Connected to database");
 });
+
+const sendPushNotification = async (userId, token, title, body) => {
+    const message = {
+        to: token,
+        sound: 'default',
+        title: title,
+        body: body,
+        data: { someData: 'goes here' },
+    };
+
+    // Send push notification
+    await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+    });
+
+    // Insert notification into the database
+    try {
+        await fetch('http://192.168.100.147:8080/api/notifications', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: userId,
+                notification_title: title,
+                notification_body: body,
+            }),
+        });
+    } catch (error) {
+        console.error('Error storing notification:', error);
+    }
+};
+
+app.post('/api/notifications', (req, res) => {
+    const { userId, notification_title, notification_body } = req.body;
+
+    if (!userId || !notification_title || !notification_body) {
+        return res.status(400).json({ msg: 'Please provide all required fields' });
+    }
+
+    const query = 'INSERT INTO notifications (user_id, notification_title, notification_body) VALUES (?, ?, ?)';
+    db.query(query, [userId, notification_title, notification_body], (err, result) => {
+        if (err) {
+            console.error('Error inserting notification:', err);
+            return res.status(500).json({ msg: 'Failed to store notification' });
+        }
+
+        res.status(201).json({ msg: 'Notification stored successfully', notification_id: result.insertId });
+    });
+});
+
+app.post('/send-notification', (req, res) => {
+    sendPushNotification(18,'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]','Test1 Notification','This is a test notification');
+    res.status(200).json({ msg: 'Notification sent successfully' });
+});
+
 
 
 
@@ -103,6 +165,82 @@ app.get('/getPonds', (req, res) => {
             }
 
             return res.status(200).json({ ponds: results });
+        });
+    });
+});
+
+app.get('/getPondData/:pondId', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const pondId = req.params.pondId;
+
+    if (!token) {
+        return res.status(403).json({ msg: 'Token is required' });
+    }
+
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ msg: 'Invalid token' });
+        }
+
+        const userId = decoded.user;
+        
+        // Verify that the pond belongs to the user and fetch the channel ID and read key
+        const query = `
+            SELECT p.channel_id, p.pond_score, i.channel_read 
+            FROM Pond p 
+            JOIN Iot i ON p.channel_id = i.channel_id 
+            WHERE p.pond_id = ? AND p.user_id = ?`;
+        console.log('Pond ID:', pondId);
+        console.log('User ID:', userId);
+        db.query(query, [pondId, userId], (err, results) => {
+            if (err) {
+                console.error('Database query error:', err);
+                return res.status(500).json({ msg: 'Database query error' });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({ msg: 'Pond not found or access denied' });
+            }
+
+            const { channel_id, pond_score, channel_read } = results[0];
+
+            // Fetch data from ThingSpeak using the channel ID and API read key
+            const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
+
+            axios.get(url)
+                .then(response => {
+                    const feeds = response.data.feeds;
+                    const formattedDates = feeds.map(feed => feed.created_at.split('T')[0]);
+
+                    const temperatureData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field1)
+                    }));
+
+                    const phData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field2)
+                    }));
+
+                    const turbidityData = feeds.map(feed => ({
+                        date: feed.created_at.split('T')[0],
+                        value: parseFloat(feed.field3)
+                    }));
+
+                    // Send response containing pond health score and ThingSpeak data
+                    res.status(200).json({
+                        pond_score: pond_score,
+                        temperatureData: temperatureData,
+                        phData: phData,
+                        turbidityData: turbidityData,
+                        dates: [...new Set(formattedDates)]
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data from ThingSpeak:', error);
+                    res.status(500).json({ msg: 'Error fetching data from ThingSpeak' });
+                });
         });
     });
 });
@@ -515,18 +653,202 @@ app.listen(8080, '0.0.0.0', () => {
 
 
 
+function verifyToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(403).json({ msg: "Token is required" });
+    }
+
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ msg: "Invalid token" });
+        }
+
+        req.userId = decoded.user; // Attach userId to the request object
+        next(); // Proceed to the next middleware or route handler
+    });
+}
+
+// Helper function to delete records in /delete-pond API
+function deleteRecords(channel_id, fish_id, pondId, res) {
+    // Begin transaction to ensure atomic deletion
+    db.beginTransaction((transactionErr) => {
+        if (transactionErr) {
+            return res.status(500).json({ msg: "Transaction error." });
+        }
+
+        // Delete the pond first
+        const deletePondQuery = 'DELETE FROM Pond WHERE pond_id = ?';
+        db.query(deletePondQuery, [pondId], (pondErr) => {
+            if (pondErr) {
+                return db.rollback(() => {
+                    res.status(500).json({ msg: "Error deleting pond." });
+                });
+            }
+
+            // Delete alerts for the pond's channel
+            const deleteAlertsQuery = 'DELETE FROM Alert WHERE channel_id = ?';
+            db.query(deleteAlertsQuery, [channel_id], (alertErr) => {
+                if (alertErr) {
+                    return db.rollback(() => {
+                        res.status(500).json({ msg: "Error deleting alerts." });
+                    });
+                }
+
+                // Delete the IoT channel data
+                const deleteIotQuery = 'DELETE FROM Iot WHERE channel_id = ?';
+                db.query(deleteIotQuery, [channel_id], (iotErr) => {
+                    if (iotErr) {
+                        return db.rollback(() => {
+                            res.status(500).json({ msg: "Error deleting IoT channel." });
+                        });
+                    }
+
+                    // Delete the fish data
+                    const deleteFishQuery = 'DELETE FROM Fishgroup WHERE id = ?';
+                    db.query(deleteFishQuery, [fish_id], (fishErr) => {
+                        if (fishErr) {
+                            return db.rollback(() => {
+                                res.status(500).json({ msg: "Error deleting fish data." });
+                            });
+                        }
+
+                        // Commit the transaction
+                        db.commit((commitErr) => {
+                            if (commitErr) {
+                                return db.rollback(() => {
+                                    res.status(500).json({ msg: "Transaction commit error." });
+                                });
+                            }
+                            res.status(200).json({ msg: "Pond and related data deleted successfully." });
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
+
+// DELETE Pond API
+app.delete('/delete-pond/:pondId', verifyToken, (req, res) => {
+    const userId = req.userId;
+    const pondId = req.params.pondId;
+
+    // Check if the pond belongs to the user
+    const verifyQuery = 'SELECT pond_id, channel_id, fish_id FROM Pond WHERE pond_id = ? AND user_id = ?';
+    db.query(verifyQuery, [pondId, userId], (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).json({ msg: "Database query error" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ msg: "Pond not found or does not belong to the user." });
+        }
+
+        const { channel_id, fish_id } = results[0];
+
+        // Call the deleteRecords function
+        deleteRecords(channel_id, fish_id, pondId, res);
+    });
+});
+
+
+app.get('/api/user', verifyToken, (req, res) => {
+    const userId = req.userId; // Extracted from the token by verifyToken
+
+    const query = 'SELECT user_id, email, username, date_of_joining, imagelink, D_O_B, contact_no, gender FROM Users WHERE user_id = ?';
+    
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            return res.status(500).json({ msg: 'Database query error', error: err });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        res.status(200).json(result[0]);
+    });
+});
 
 
 
+app.put('/api/user', verifyToken, (req, res) => {
+    const userId = req.userId; // Extracted from the token by verifyToken
+    const { username, email, imagelink, D_O_B, contact_no, gender } = req.body;
 
+    const query = `
+        UPDATE Users 
+        SET username = ?, email = ?, imagelink = ?, D_O_B = ?, contact_no = ?, gender = ?
+        WHERE user_id = ?
+    `;
 
+    db.query(
+        query, 
+        [username, email, imagelink, D_O_B, contact_no, gender, userId], 
+        (err, result) => {
+            if (err) {
+                return res.status(500).json({ msg: 'Database update error', error: err });
+            }
 
-// app.post('/protected',(req,res)=>{
-//     const token=req.headers['authorization']?.split('')[1];
-//     if(!token) return res.status(401).json("No token provided");
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ msg: 'User not found' });
+            }
 
-//     jwt.verify(token,secretKey,(err,decoded)=>{
-//         if(err) return res.status(300).json("Invalid token");
-//         res.status(200).json({msg:'You are autorized',userId:decoded.userId})
-//     })
-// })
+            res.status(200).json({ msg: 'User updated successfully' });
+        }
+    );
+});
+
+app.post('/api/store-notification-token', verifyToken, (req, res) => {
+    const { notification_token } = req.body;
+    const userId = req.userId;
+
+    if (!notification_token) {
+        return res.status(400).json({ msg: "Notification token is required" });
+    }
+
+    // Check if the token already exists in the database
+    const checkQuery = 'SELECT * FROM not_token_table WHERE user_id = ? AND notification_token = ?';
+    
+    db.query(checkQuery, [userId, notification_token], (err, results) => {
+        if (err) {
+            console.error('Error checking token in the database:', err);
+            return res.status(500).json({ msg: "Failed to check notification token" });
+        }
+
+        // If the token already exists, do not insert
+        if (results.length > 0) {
+            return res.status(200).json({ msg: "Notification token already exists" });
+        }
+
+        // If the token does not exist, insert it into the database
+        const insertQuery = 'INSERT INTO not_token_table (user_id, notification_token) VALUES (?, ?)';
+        db.query(insertQuery, [userId, notification_token], (err, result) => {
+            if (err) {
+                console.error('Error inserting token into the database:', err);
+                return res.status(500).json({ msg: "Failed to store notification token" });
+            }
+
+            res.status(201).json({ msg: "Notification token stored successfully", notification_id: result.insertId });
+        });
+    });
+});
+
+app.get('/api/notifications', verifyToken, (req, res) => {
+    const userId = req.userId; 
+
+    const query = 'SELECT notification_id, notification_title, notification_body, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC';
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching notifications:', err);
+            return res.status(500).json({ msg: 'Failed to fetch notifications' });
+        }
+
+        res.status(200).json(results);
+    });
+});

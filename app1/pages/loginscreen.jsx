@@ -1,13 +1,77 @@
-import React, { useState, useContext } from 'react';
-import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal } from 'react-native';
+
+import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Platform } from 'react-native';
+import React, { useState, useRef, useEffect,useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
-
-// Import your logo image
 import logo from '../assets/logo.png';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+async function registerForPushNotificationsAsync() {
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      alert('Permission not granted to get push token for push notification!');
+      return;
+    }
+
+    const storedPushToken = await AsyncStorage.getItem('pushToken');
+    if (storedPushToken) {
+      return storedPushToken;
+    }
+
+    const projectId =
+      Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    if (!projectId) {
+      alert('Project ID not found');
+      return;
+    }
+
+    try {
+      const pushTokenString = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId,
+        })
+      ).data;
+
+      await AsyncStorage.setItem('pushToken', pushTokenString);
+
+      return pushTokenString;
+    } catch (e) {
+      alert(`Error: ${e}`);
+    }
+  } else {
+    alert('Must use physical device for push notifications');
+  }
+}
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -15,11 +79,52 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      const storedPushToken = await AsyncStorage.getItem('pushToken');
+      console.log('Stored push token:', storedPushToken);
+
+      if (!storedPushToken) {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          setExpoPushToken(token);
+          console.log('Push token:', token);
+        } else {
+          console.log('Failed to get push token');
+        }
+      } else {
+        setExpoPushToken(storedPushToken);
+      }
+
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        setAlertMessage('Notification received!');
+        setModalVisible(true);
+      });
+
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log(response);
+      });
+    };
+
+    initializeNotifications();
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
 
   const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
 
   const Login = async () => {
-    console.log("clicked");
     if (!email || !password) {
       setAlertMessage("Please fill in all fields.");
       setModalVisible(true);
@@ -35,6 +140,25 @@ const LoginScreen = () => {
       if (response.status === 200) {
         await AsyncStorage.setItem('token', response.data.token);
         setAlertMessage("Login successful!");
+
+        // Get the latest push token
+        const token = expoPushToken || await AsyncStorage.getItem('pushToken');
+
+        if (token) {
+          // Store the push token in the database
+          const authToken = response.data.token;
+          await axios.post(
+            process.env.EXPO_PUBLIC_API_URL + '/api/store-notification-token',
+            { notification_token: token },
+            {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        }
+
         setModalVisible(true);
         setTimeout(() => {
           setModalVisible(false);
@@ -100,7 +224,7 @@ const LoginScreen = () => {
         </View>
       </TouchableOpacity>
 
-      {/* Custom Alert Modal */}
+      
       <Modal
         animationType="slide"
         transparent={true}
@@ -225,37 +349,37 @@ const styles = StyleSheet.create({
     color: '#00bcd5',
     fontWeight: '500',
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  lightModal: {
-    backgroundColor: 'white',
-  },
-  darkModal: {
-    backgroundColor: '#333',
-  },
-  modalText: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  modalButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+//   modalOverlay: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//   },
+//   modalContainer: {
+//     width: 300,
+//     padding: 20,
+//     borderRadius: 10,
+//     alignItems: 'center',
+//   },
+//   lightModal: {
+//     backgroundColor: 'white',
+//   },
+//   darkModal: {
+//     backgroundColor: '#333',
+//   },
+//   modalText: {
+//     fontSize: 18,
+//     textAlign: 'center',
+//     marginBottom: 20,
+//   },
+//   modalButton: {
+//     paddingVertical: 10,
+//     paddingHorizontal: 20,
+//     borderRadius: 5,
+//   },
+//   modalButtonText: {
+//     color: 'white',
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//   },
 });

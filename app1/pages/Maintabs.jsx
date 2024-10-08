@@ -10,15 +10,12 @@ import Setting from '../pages/setting';
 import Analytics from "../pages/analytics";
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
-<<<<<<< Updated upstream
+
 import FishGuidePage from '../pages/fishguide';
-
-
-
-=======
 import EditProfileScreen from './Editprofile';
-import FishGuidePage from '../pages/fishguide';
->>>>>>> Stashed changes
+import NotificationScreen from './notifications';
+
+
 
 const Tab = createBottomTabNavigator();
 
@@ -67,6 +64,9 @@ function MainTabs() {
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
           }
+          else if (route.name === 'Notifications') {
+            iconName = focused ? 'notifications' : 'notifications-outline';
+          }
 
           return <Icon name={iconName} size={size} color={color} />;
         },
@@ -82,6 +82,8 @@ function MainTabs() {
     >
       <Tab.Screen name="Ponds" component={Ponds} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Notifications" component={NotificationScreen} />
+
       <Tab.Screen name="Settings" component={Setting} />
       
       
@@ -105,15 +107,15 @@ function MainTabs() {
         name="Fish Guide"
         component={FishGuidePage}
         options={{ tabBarButton: () => null }}
-<<<<<<< Updated upstream
-=======
+
       />
       <Tab.Screen
         name="Edit Profile"
         component={EditProfileScreen}
         options={{ tabBarButton: () => null }}
->>>>>>> Stashed changes
+
       />
+      
     </Tab.Navigator>
   );
 }

@@ -1,22 +1,21 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import RNPickerSelect from 'react-native-picker-select';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { DarkModeContext } from '../contexts/DarkModeContext';
+import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import the modal date picker
 
 const EditProfileScreen = () => {
   const [UserName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [birth, setBirth] = useState(new Date());
+  const [birth, setBirth] = useState(new Date()); // State for date of birth
   const [gender, setGender] = useState('');
   const [profileImage, setProfileImage] = useState(null);
-  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false); // State to show/hide date picker
 
-  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
-
+  // Function to fetch user data when the component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -51,6 +50,7 @@ const EditProfileScreen = () => {
     fetchUserData();
   }, []);
 
+  // Function to handle updating the profile
   const updateProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -64,7 +64,7 @@ const EditProfileScreen = () => {
         username: UserName,
         email: email,
         imagelink: profileImage,
-        D_O_B: birth.toISOString().split('T')[0],
+        D_O_B: birth.toISOString().split('T')[0], // Format the date to YYYY-MM-DD
         contact_no: phoneNumber,
         gender: gender,
       };
@@ -84,58 +84,63 @@ const EditProfileScreen = () => {
     }
   };
 
+  // Show date picker
   const showDatePicker = () => {
     setDatePickerVisible(true);
   };
 
+  // Hide date picker
   const hideDatePicker = () => {
     setDatePickerVisible(false);
   };
 
+  // Handle date picked
   const handleConfirm = (date) => {
     setBirth(date);
     hideDatePicker();
   };
 
   return (
-    <ScrollView style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+    <ScrollView style={styles.container}>
+      {/* Profile Image */}
       <View style={styles.imageContainer}>
         <Image source={profileImage ? { uri: profileImage } : require('../assets/me.jpg')} style={styles.profileImage} />
-        <TouchableOpacity style={[styles.editIcon, isDarkMode ? styles.darkEditIcon : styles.lightEditIcon]}>
+        <TouchableOpacity style={styles.editIcon}>
+          <Icon name="camera-outline" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <Text style={[styles.header, isDarkMode ? styles.darkText : styles.lightText]}>Edit Profile</Text>
+      {/* Edit Profile Header */}
+      <Text style={styles.header}>Edit Profile</Text>
 
+      {/* Input Fields */}
       <View style={styles.inputContainer}>
         <TextInput
-          style={[styles.input, isDarkMode ? styles.darkInput : styles.lightInput]}
+          style={styles.input}
           placeholder="User Name"
-          placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
           value={UserName}
           onChangeText={setUserName}
         />
         <TextInput
-          style={[styles.input, isDarkMode ? styles.darkInput : styles.lightInput]}
+          style={styles.input}
           placeholder="Email"
-          placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
           value={email}
           onChangeText={setEmail}
         />
-        <View style={[styles.phoneContainer, isDarkMode ? styles.darkInput : styles.lightInput]}>
-          <Text style={[styles.countryCode, isDarkMode ? styles.darkText : styles.lightText]}>+92</Text>
+        <View style={styles.phoneContainer}>
+          <Text style={styles.countryCode}>+92</Text>
           <TextInput
             style={styles.phoneInput}
             placeholder="Phone Number"
-            placeholderTextColor={isDarkMode ? '#ccc' : '#888'}
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
           />
         </View>
 
-        <TouchableOpacity style={[styles.input, isDarkMode ? styles.darkInput : styles.lightInput]} onPress={showDatePicker}>
-          <Text style={isDarkMode ? styles.darkText : styles.lightText}>{birth ? birth.toDateString() : 'Select Date of Birth'}</Text>
+        {/* Date of Birth Picker */}
+        <TouchableOpacity style={styles.input} onPress={showDatePicker}>
+          <Text>{birth ? birth.toDateString() : 'Select Date of Birth'}</Text>
         </TouchableOpacity>
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
@@ -145,6 +150,7 @@ const EditProfileScreen = () => {
           date={birth}
         />
 
+        {/* Gender Picker */}
         <RNPickerSelect
           onValueChange={(value) => setGender(value)}
           items={[
@@ -154,11 +160,12 @@ const EditProfileScreen = () => {
           ]}
           placeholder={{ label: 'Gender', value: null }}
           value={gender}
-          style={pickerSelectStyles(isDarkMode)}
+          style={pickerSelectStyles}
         />
       </View>
 
-      <TouchableOpacity style={[styles.saveChangesButton, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={updateProfile}>
+      {/* Save Changes Button */}
+      <TouchableOpacity style={styles.saveChangesButton} onPress={updateProfile}>
         <Text style={styles.saveChangesText}>Save Changes</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -168,13 +175,8 @@ const EditProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-  },
-  lightContainer: {
     backgroundColor: '#fff',
-  },
-  darkContainer: {
-    backgroundColor: '#121212',
+    padding: 16,
   },
   imageContainer: {
     alignItems: 'center',
@@ -185,11 +187,13 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
   },
-  lightEditIcon: {
+  editIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 120,
     backgroundColor: '#007bff',
-  },
-  darkEditIcon: {
-    backgroundColor: '#444',
+    borderRadius: 15,
+    padding: 5,
   },
   header: {
     fontSize: 24,
@@ -197,34 +201,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 20,
   },
-  lightText: {
-    color: '#000',
-  },
-  darkText: {
-    color: '#fff',
-  },
   inputContainer: {
     marginVertical: 20,
   },
   input: {
     borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
-  },
-  lightInput: {
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
-  },
-  darkInput: {
-    color: '#fff',
-    borderColor: '#555',
-    backgroundColor: '#1e1e1e',
   },
   phoneContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 8,
     marginBottom: 15,
   },
@@ -235,19 +226,13 @@ const styles = StyleSheet.create({
   phoneInput: {
     flex: 1,
     padding: 10,
-    color: '#000',
   },
   saveChangesButton: {
+    backgroundColor: '#28a745',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
-  },
-  lightButton: {
-    backgroundColor: '#00bcd5',
-  },
-  darkButton: {
-    backgroundColor: '#00bcd5',
   },
   saveChangesText: {
     color: '#fff',
@@ -255,24 +240,22 @@ const styles = StyleSheet.create({
   },
 });
 
-const pickerSelectStyles = (isDarkMode) => ({
+const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
     borderWidth: 1,
-    borderColor: isDarkMode ? '#555' : '#ccc',
-    backgroundColor: isDarkMode ? '#1e1e1e' : '#fff',
+    borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
-    color: isDarkMode ? '#fff' : '#000',
+    color: '#000',
   },
   inputAndroid: {
     borderWidth: 1,
-    borderColor: isDarkMode ? '#555' : '#ccc',
-    backgroundColor: isDarkMode ? '#1e1e1e' : '#fff',
+    borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
-    color: isDarkMode ? '#fff' : '#000',
+    color: '#000',
   },
 });
 
