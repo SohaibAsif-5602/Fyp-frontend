@@ -21,55 +21,6 @@ const AddPond = ({ navigation }) => {
 
   const { isDarkMode } = useContext(DarkModeContext); // Consume isDarkMode from context
 
-  // const handleSubmit = () => {
-  //   if (pondName && location && fishSpecies && fishAge) {
-  //     if (parseInt(fishAge) <= 6) {
-        
-  //       // Handle form submission here (e.g., API call or local state update)
-  //       Alert.alert('Pond Added', ${pondName} pond added successfully!);
-  //       navigation.goBack();
-  //     } else {
-  //       Alert.alert('Error', 'Fish age cannot be more than 6 months.');
-  //     }
-  //   } else {
-  //     Alert.alert('Error', 'Please fill all fields');
-  //   }
-  // };
-
-  // const handleSubmit = async () => {
-  //   if (pondName && location && fishSpecies && fishAge) {
-  //     if (parseInt(fishAge) <= 6) {
-  //       try {
-  //         // Make a POST request to your backend to create a ThingSpeak channel
-  //         const response = await fetch('http://10.120.150.227:8080/create-channel', {
-  //           method: 'POST',
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //           },
-  //           body: JSON.stringify({ channelName: pondName }), // Send the pond name to the backend
-  //         });
-  
-  //         const data = await response.json();
-  
-  //         if (response.ok) {
-  //           // Handle successful response
-  //           Alert.alert('Pond Added', ${pondName} pond added successfully!);
-  //           navigation.goBack();
-  //         } else {
-  //           // Handle error from the server
-  //           Alert.alert('Error', data.error || 'Failed to create a channel. Please try again.');
-  //         }
-  //       } catch (error) {
-  //         console.error('Error creating channel:', error);
-  //         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-  //       }
-  //     } else {
-  //       Alert.alert('Error', 'Fish age cannot be more than 6 months.');
-  //     }
-  //   } else {
-  //     Alert.alert('Error', 'Please fill all fields');
-  //   }
-  // };
   const handleSubmit = async () => {
     if (pondName && location && fishSpecies && fishAge) {
       if (parseInt(fishAge) <= 6) {
@@ -100,6 +51,10 @@ const AddPond = ({ navigation }) => {
           if (response.ok) {
             // Handle successful response
             Alert.alert(`'Pond Added', ${pondName} pond added successfully!`);
+            setPondName('');
+            setLocation('');
+            setFishSpecies('');
+            setFishAge('');
             navigation.goBack();
           } else {
             // Handle error from the server

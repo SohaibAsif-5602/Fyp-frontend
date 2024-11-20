@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
   },
   pondCard: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 3,
@@ -115,9 +114,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   browseIcon: {
-    marginLeft: 5,
-    padding: 5,
-    alignSelf: 'center',
+    padding: 10,
   },
   pondContent: {
     flexDirection: 'row',
