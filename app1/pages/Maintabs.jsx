@@ -10,13 +10,9 @@ import Setting from '../pages/setting';
 import Analytics from "../pages/analytics";
 import AddPond from '../pages/AddPond';
 import AlertHistory from "../pages/alerthistory";
-
-import FishGuidePage from '../pages/fishguide';
 import EditProfileScreen from './Editprofile';
+import FishGuidePage from '../pages/fishguide';
 import NotificationScreen from './notifications';
-
-
-
 const Tab = createBottomTabNavigator();
 
 function CustomHeader({ title, canGoBack }) {
@@ -63,8 +59,7 @@ function MainTabs() {
             iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
-          }
-          else if (route.name === 'Notifications') {
+          } else if (route.name === 'Notification') {
             iconName = focused ? 'notifications' : 'notifications-outline';
           }
 
@@ -82,10 +77,8 @@ function MainTabs() {
     >
       <Tab.Screen name="Ponds" component={Ponds} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Notifications" component={NotificationScreen} />
-
       <Tab.Screen name="Settings" component={Setting} />
-      
+      <Tab.Screen name="Notification" component={NotificationScreen}/>
       
       <Tab.Screen
         name="Analytics"
@@ -107,15 +100,12 @@ function MainTabs() {
         name="Fish Guide"
         component={FishGuidePage}
         options={{ tabBarButton: () => null }}
-
       />
       <Tab.Screen
         name="Edit Profile"
         component={EditProfileScreen}
         options={{ tabBarButton: () => null }}
-
       />
-      
     </Tab.Navigator>
   );
 }

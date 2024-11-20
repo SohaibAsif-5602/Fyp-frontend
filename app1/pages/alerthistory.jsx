@@ -20,7 +20,7 @@ const Checkbox = ({ value, onValueChange, label }) => (
   </TouchableOpacity>
 );
 
-export default function AlertHistory() {
+export default function AlertHistory() {  
   const [highestTemperature, setHighestTemperature] = useState(null);
   const [lowestTemperature, setLowestTemperature] = useState(null);
   const [highestPh, setHighestPh] = useState(null);

@@ -173,12 +173,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   con: {
-    paddingTop: 20,
+    paddingTop: 0,
   },
   txthellocontainer: {
-    marginTop: 20,
+    marginTop: 0,
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 1,
   },
   txthello: {
     textAlign: 'center',

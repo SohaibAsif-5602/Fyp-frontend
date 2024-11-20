@@ -1,28 +1,24 @@
-
+import React, { useState, useCallback, useContext,useEffect  } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import React, { useEffect,useState, useCallback, useContext } from 'react';
 import { DarkModeContext } from '../contexts/DarkModeContext'; // Assuming you have a DarkModeContext
-
-
+import fish from '../assets/Fish PICS/GrassCarp.jpg'
 const PondList = () => {
   const navigation = useNavigation();
   const [ponds, setPonds] = useState([]);
   const { isDarkMode } = useContext(DarkModeContext); // Access dark mode context
 
-  // Fetch ponds data whenever the component is focused
-  useFocusEffect(
-    useCallback(() => {
-      const fetchPonds = async () => {
-        try {
-          const token = await AsyncStorage.getItem('token');
-          if (!token) {
-            console.log('No token found. Redirecting to login.');
-            navigation.navigate('Login');
-            return;
-          }
+  useEffect(() => {
+    const fetchPonds = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          console.log('No token found. Redirecting to login.');
+          navigation.navigate('Login');
+          return;
+        }
 
         const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/getPonds', {
           method: 'GET',
@@ -32,33 +28,28 @@ const PondList = () => {
           },
         });
 
+        console.log('Response status:', response.status);
 
-          console.log('Response status of ponds:', response.status);
-
-          if (response.ok) {
-            const data = await response.json();
-            setPonds(data.ponds);
-          } else if (response.status === 401) {
-            console.error('Invalid token. Redirecting to login.');
-            await AsyncStorage.removeItem('token');
-            navigation.navigate('Login');
-          } else {
-            console.error('Failed to fetch ponds. Status:', response.status);
-            const errorData = await response.text();
-            console.error('Error details:', errorData);
-          }
-        } catch (error) {
-          console.error('Error fetching ponds data:', error.message);
+        if (response.ok) {
+          const data = await response.json();
+          setPonds(data.ponds);
+        } else if (response.status === 401) {
+          console.error('Invalid token. Redirecting to login.');
+          await AsyncStorage.removeItem('token');
           navigation.navigate('Login');
+        } else {
+          console.error('Failed to fetch ponds. Status:', response.status);
+          const errorData = await response.text();
+          console.error('Error details:', errorData);
         }
-      };
+      } catch (error) {
+        console.error('Error fetching pond data:', error.message);
+        navigation.navigate('Login');
+      }
+    };
 
-
-      fetchPonds();
-    }, [navigation])
-  );
-
-
+    fetchPonds();
+  }, [navigation]);
 
   const handlePondClick = (pond) => {
     // Navigate to the Analytics screen and pass the pond_id as a parameter
@@ -72,7 +63,7 @@ const PondList = () => {
           <View key={index} style={[styles.pondCard, isDarkMode ? styles.darkCard : styles.lightCard]}>
             <TouchableOpacity style={styles.pondContent} onPress={() => handlePondClick(pond)}>
               <View style={styles.imgcontainer}>
-                <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
+                <Image source={fish} style={styles.pondImage} />
               </View>
               <View style={styles.pondDetails}>
                 <Text style={[styles.city, isDarkMode ? styles.darkText : styles.lightText]}>{pond.pond_name}</Text>
@@ -182,14 +173,14 @@ const styles = StyleSheet.create({
   },
   addButton: {
     paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 40,
     borderRadius: 30,
     alignSelf: 'center',
     marginBottom: 20,
     elevation: 2,
     position: 'absolute',
     bottom: 20,
-    width: '35%',
+    width: '80%',
   },
   lightButton: {
     backgroundColor: '#00bcd5',

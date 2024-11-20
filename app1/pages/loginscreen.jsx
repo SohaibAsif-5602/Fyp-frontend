@@ -1,15 +1,14 @@
-
 import { Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, Platform } from 'react-native';
-import React, { useState, useRef, useEffect,useContext } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
-import logo from '../assets/logo.png';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import logo from '../assets/logo.png';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -82,7 +81,7 @@ const LoginScreen = () => {
   const [expoPushToken, setExpoPushToken] = useState('');
   const notificationListener = useRef();
   const responseListener = useRef();
-
+  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
   useEffect(() => {
     const initializeNotifications = async () => {
       const storedPushToken = await AsyncStorage.getItem('pushToken');
@@ -121,8 +120,6 @@ const LoginScreen = () => {
       }
     };
   }, []);
-
-  const { isDarkMode } = useContext(DarkModeContext); // Access dark mode state
 
   const Login = async () => {
     if (!email || !password) {
@@ -224,7 +221,7 @@ const LoginScreen = () => {
         </View>
       </TouchableOpacity>
 
-      
+      {/* Custom Alert Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -246,7 +243,6 @@ const LoginScreen = () => {
     </View>
   );
 };
-
 export default LoginScreen;
 
 const styles = StyleSheet.create({
@@ -349,37 +345,37 @@ const styles = StyleSheet.create({
     color: '#00bcd5',
     fontWeight: '500',
   },
-//   modalOverlay: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-//   },
-//   modalContainer: {
-//     width: 300,
-//     padding: 20,
-//     borderRadius: 10,
-//     alignItems: 'center',
-//   },
-//   lightModal: {
-//     backgroundColor: 'white',
-//   },
-//   darkModal: {
-//     backgroundColor: '#333',
-//   },
-//   modalText: {
-//     fontSize: 18,
-//     textAlign: 'center',
-//     marginBottom: 20,
-//   },
-//   modalButton: {
-//     paddingVertical: 10,
-//     paddingHorizontal: 20,
-//     borderRadius: 5,
-//   },
-//   modalButtonText: {
-//     color: 'white',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  lightModal: {
+    backgroundColor: 'white',
+  },
+  darkModal: {
+    backgroundColor: '#333',
+  },
+  modalText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

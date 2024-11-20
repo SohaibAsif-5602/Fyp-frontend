@@ -29,6 +29,9 @@
         "projectId": "b29b5672-1a00-4bb2-a33d-cba6a6ac980c"
       }
     },
-    "owner": "sohaib5602"
+    "owner": "sohaib5602",
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
