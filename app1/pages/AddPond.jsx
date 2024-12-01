@@ -74,11 +74,9 @@ const AddPond = ({ navigation }) => {
   
 
   return (
+    
     <ScrollView contentContainerStyle={[styles.container, isDarkMode && styles.darkContainer]}>
-      <Image
-        source={require('../assets/fish_logo.png')} // Replace with your pond image URL
-        style={styles.headerImage}
-      />
+     
 
       <Text style={[styles.label, isDarkMode && styles.darkText]}>Pond Name</Text>
       <TextInput
@@ -141,7 +139,7 @@ const AddPond = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
+    padding: 40,
     backgroundColor: '#f9f9f9',
   },
   darkContainer: {
@@ -167,7 +165,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 18,
     paddingHorizontal: 10,
     marginBottom: 16,
     backgroundColor: '#fff',
@@ -202,9 +200,11 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   addButton: {
-    backgroundColor: '#00bcd4',
+    backgroundColor: '#0077BE',
     paddingVertical: 15,
-    borderRadius: 8,
+    alignSelf:'center',
+    borderRadius: 32,
+    width:105,
     alignItems: 'center',
     marginTop: 20,
   },

@@ -80,7 +80,7 @@ const PondList = () => {
       </ScrollView>
 
       <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddPond')}>
-        <Text style={styles.addText}>+ Add Pond</Text>
+        <Text style={styles.addText}>+ Add</Text>
       </TouchableOpacity>
     </View>
   );
@@ -156,16 +156,16 @@ const styles = StyleSheet.create({
     color: '#e74c3c',
   },
   addButton: {
-    backgroundColor: '#2980b9',
+    backgroundColor: '#0077BE',
     paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
     borderRadius: 30,
+    top: '85%',
+    right: '5%',
     alignSelf: 'center',
-    marginBottom: 20,
     elevation: 2,
     position: 'absolute',
-    bottom: 20,
-    width: '35%',
+    width: '28%',
   },
   addText: {
     fontSize: 18,
