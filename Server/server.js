@@ -1,19 +1,20 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import './db.js'; // Import the database connection
+import './db.js'; 
 import authRoutes from './routes/authRoutes.js';
 import pondRoutes from './routes/pondRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
-dotenv.config(); // Load environment variables
+dotenv.config(); 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/ponds', pondRoutes);
 app.use('/api/users', userRoutes);

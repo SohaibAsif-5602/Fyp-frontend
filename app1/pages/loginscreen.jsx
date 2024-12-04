@@ -120,6 +120,7 @@ const LoginScreen = () => {
   }, []);
 
   const Login = async () => {
+    console.log('Logging in...');
     if (!email || !password) {
       setAlertMessage("Please fill in all fields.");
       setModalVisible(true);
@@ -127,7 +128,7 @@ const LoginScreen = () => {
     }
 
     try {
-      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/login', {
+      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/login', {
         email,
         password,
       });

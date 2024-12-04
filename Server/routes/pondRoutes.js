@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyToken } from '../middlewares.js';
+import { verifyToken } from '../Middlewares/middlewares.js';
 import { addPond, deletePond } from '../controllers/pondController.js';
 
 const router = express.Router();

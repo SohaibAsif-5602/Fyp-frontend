@@ -1,14 +1,18 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Modal, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const PondList = () => {
   const navigation = useNavigation();
   const [ponds, setPonds] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPond, setSelectedPond] = useState(null);
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
 
-  // Fetch ponds data whenever the component is focused
+  const browseIconRefs = useRef([]); // To store refs for each browse icon
+
   useFocusEffect(
     useCallback(() => {
       const fetchPonds = async () => {
@@ -23,38 +27,46 @@ const PondList = () => {
           const response = await fetch(process.env.EXPO_PUBLIC_API_URL + '/getPonds', {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           });
 
-          console.log('Response status of ponds:', response.status);
-
           if (response.ok) {
             const data = await response.json();
             setPonds(data.ponds);
+            console.log('Ponds fetched:', data.ponds);
           } else if (response.status === 401) {
-            console.error('Invalid token. Redirecting to login.');
             await AsyncStorage.removeItem('token');
             navigation.navigate('Login');
           } else {
-            console.error('Failed to fetch ponds. Status:', response.status);
-            const errorData = await response.text();
-            console.error('Error details:', errorData);
+            console.error('Failed to fetch ponds');
           }
         } catch (error) {
-          console.error('Error fetching ponds data:', error.message);
+          console.error('Error fetching ponds:', error.message);
           navigation.navigate('Login');
         }
       };
 
       fetchPonds();
-    }, [navigation]) // Adding navigation as a dependency
+    }, [navigation])
   );
 
-  const handlePondClick = (pond) => {
-    // Navigate to the Analytics screen and pass the pond_id as a parameter
-    navigation.navigate('Analytics', { pondId: pond.pond_id });
+  const handleBrowseClick = (pond, index) => {
+    // Measure the position of the browse icon
+    browseIconRefs.current[index]?.measure(
+      (x, y, width, height, pageX, pageY) => {
+        setModalPosition({ top:( pageY + height / 2)-100, left: pageX - 120 }); // Adjusted `left` for left alignment
+        setSelectedPond(pond);
+        setModalVisible(true);
+      }
+    );
+  };
+
+  const handleAction = (action) => {
+    setModalVisible(false);
+    Alert.alert(`Action Selected: ${action}`, `For Pond: ${selectedPond.pond_name}`);
+    navigation.navigate('AddPond', { pond: selectedPond.pond_id });
   };
 
   return (
@@ -62,7 +74,7 @@ const PondList = () => {
       <ScrollView contentContainerStyle={styles.pondList}>
         {ponds.map((pond, index) => (
           <View key={index} style={styles.pondCard}>
-            <TouchableOpacity style={styles.pondContent} onPress={() => handlePondClick(pond)}>
+            <TouchableOpacity style={styles.pondContent} onPress={() => navigation.navigate('Analytics', { pondId: pond.pond_id })}>
               <View style={styles.imgcontainer}>
                 <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
               </View>
@@ -74,7 +86,12 @@ const PondList = () => {
                 {pond.pond_score < 50 && <Text style={styles.warning}>⚠️ Health Warning</Text>}
               </View>
             </TouchableOpacity>
-            <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
+            <TouchableOpacity
+              ref={(el) => (browseIconRefs.current[index] = el)} // Store the ref for each browse icon
+              onPress={() => handleBrowseClick(pond, index)}
+            >
+              <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
+            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -82,6 +99,33 @@ const PondList = () => {
       <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddPond')}>
         <Text style={styles.addText}>+ Add</Text>
       </TouchableOpacity>
+
+      {/* Modal for actions */}
+      {modalVisible && (
+        <Modal transparent={true} animationType="none" visible={modalVisible}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setModalVisible(false)}
+          >
+            <View style={[styles.modalContent, { top: modalPosition.top, left: modalPosition.left }]}>
+              <TouchableOpacity style={styles.modalOption} onPress={() => { setModalVisible(false); navigation.navigate('Analytics', { pond: selectedPond.pond_id });    ;
+}}>
+                <Text style={styles.modalOptionText}>Edit Record</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Analytics', { pond: selectedPond.pond_id })}}>
+                <Text style={styles.modalOptionText}>View Details</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Analytics', { pond: selectedPond.pond_id })}}>
+                <Text style={styles.modalOptionText}>Delete </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOption} onPress={() =>{setModalVisible(false); navigation.navigate('AlertSettingsPage', { pondId: selectedPond.pond_id,pondName:selectedPond.pond_name })}}>
+                <Text style={styles.modalOptionText}>Settings</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -115,6 +159,8 @@ const styles = StyleSheet.create({
   },
   browseIcon: {
     padding: 10,
+    paddingTop: 10,
+    color:'#04324d'
   },
   pondContent: {
     flexDirection: 'row',
@@ -172,6 +218,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    
+  },
+  modalContent: {
+    position: 'absolute',
+    backgroundColor: '#fff',
+    borderWidth: 0.81,
+    borderColor: '#0077be',
+    borderRadius: 5,
+    padding: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    shadowColor:'#0077be'
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalOption: {
+    padding: 10,
+  },
+  modalOptionText: {
+    fontSize: 14,
   },
 });
 

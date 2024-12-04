@@ -25,7 +25,7 @@ const CodeVerificationScreen = ({ route, navigation }) => {
       const verifyData = await verifyResponse.json();
 
       if (verifyResponse.ok) {
-        const signupResponse = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/signup', {
+        const signupResponse = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/signup', {
           email: email,
           password: password,
           username: username,

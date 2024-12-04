@@ -1,4 +1,4 @@
-import db from './db.js';
+import db from '../db.js';
 
 export const deleteRecords = (channel_id, fish_id, pondId, res) => {
     db.beginTransaction((transactionErr) => {

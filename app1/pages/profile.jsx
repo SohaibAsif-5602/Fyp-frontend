@@ -62,7 +62,7 @@ const ProfileScreen = () => {
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
         <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
-        <TouchableOpacity style={styles.editProfileButton} onPress={() => { navigation.navigate('Edit Profile'); }}>
+        <TouchableOpacity style={styles.editProfileButton} onPress={() => { navigation.navigate('EditProfile'); }}>
           <Text style={styles.editProfileText}>Edit Profile</Text>
         </TouchableOpacity>
       </View>

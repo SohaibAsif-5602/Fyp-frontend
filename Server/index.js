@@ -90,44 +90,57 @@ app.post('/send-notification', (req, res) => {
 
 
 
-app.post('/signup',(req,res)=>{
-    const {email,password,username}=req.body;
+// app.post('/signup',(req,res)=>{
+//     const {email,password,username}=req.body;
     
-    db.query("Select * from Users where email=?",[email],(err,result)=>{
-        if(err) return res.status(500).json({msg:"Server Error 1"});
-        if(result.length>0) return res.status(400).json({msg:"user already exists"})
+//     db.query("Select * from Users where email=?",[email],(err,result)=>{
+//         if(err) return res.status(500).json({msg:"Server Error 1"});
+//         if(result.length>0) return res.status(400).json({msg:"user already exists"})
 
-    bcrypt.hash(password,saltrounds,(err,hash)=>{
+//     bcrypt.hash(password,saltrounds,(err,hash)=>{
 
-        if(err) return res.status(500).json({msg:"Server Error 2"});
+//         if(err) return res.status(500).json({msg:"Server Error 2"});
 
-        db.query("Insert into Users(email,password,username) values(?,?,?)",[email,hash,username],(err,result)=>{
-            if(err) return res.status(500).json({msg:"Error inserting in database"});
-            res.status(201).json({msg:"User Registered Successfully"});
-        })
-    })
-    });
- });
- app.post('/login', (req, res) => {
-    const { email, password } = req.body;
+//         db.query("Insert into Users(email,password,username) values(?,?,?)",[email,hash,username],(err,result)=>{
+//             if(err) return res.status(500).json({msg:"Error inserting in database"});
+//             res.status(201).json({msg:"User Registered Successfully"});
+//         })
+//     })
+//     });
+//  });
 
-    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
-        if (err) return res.status(500).json("SQL Server error");
-        if (result.length === 0) return res.status(400).json("User not found");
 
-        const user = result[0];
+
+
+
+
+
+
+//  app.post('/login', (req, res) => {
+//     const { email, password } = req.body;
+
+//     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
+//         if (err) return res.status(500).json("SQL Server error");
+//         if (result.length === 0) return res.status(400).json("User not found");
+
+//         const user = result[0];
 
         
 
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-            if (err) return res.status(500).json("Error comparing password");
-            if (!isMatch) return res.status(400).json("Passwords do not match");
+//         bcrypt.compare(password, user.password, (err, isMatch) => {
+//             if (err) return res.status(500).json("Error comparing password");
+//             if (!isMatch) return res.status(400).json("Passwords do not match");
 
-            const token = jwt.sign({ user: user.user_id }, secretKey, { expiresIn: '1h' });
-            return res.status(200).json({ msg: "Login Successful", token });
-        });
-    });
-});
+//             const token = jwt.sign({ user: user.user_id }, secretKey, { expiresIn: '1h' });
+//             return res.status(200).json({ msg: "Login Successful", token });
+//         });
+//     });
+// });
+
+
+
+
+
 
 app.get('/getPonds', (req, res) => {
     const authHeader = req.headers['authorization'];
@@ -647,7 +660,7 @@ app.post('/create-channel', async (req, res) => {
   });
 
 
-app.listen(8080, '0.0.0.0', () => {
+app.listen(8081, '0.0.0.0', () => {
     console.log("Server Running on 8080");
 });
 

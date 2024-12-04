@@ -88,7 +88,7 @@ export default function Analytics() {
       if (response.status === 200) {
         console.log('Pond deleted successfully.');
         
-        navigation.navigate('Ponds'); 
+        navigation.navigate('Maintabs'); 
       } else {
         console.error('Failed to delete the pond. Status:', response.status);
       }

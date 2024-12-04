@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import RNPickerSelect from 'react-native-picker-select';
+import * as ImagePicker from 'expo-image-picker'; // Import ImagePicker
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import the modal date picker
@@ -15,12 +16,10 @@ const EditProfileScreen = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false); // State to show/hide date picker
 
-  // Function to fetch user data when the component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-
         if (!token) {
           Alert.alert('Error', 'You must be logged in to view your profile.');
           return;
@@ -50,7 +49,27 @@ const EditProfileScreen = () => {
     fetchUserData();
   }, []);
 
-  // Function to handle updating the profile
+  const pickImage = async () => {
+    // Request permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Permission to access media library is required!');
+      return;
+    }
+
+    // Open image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri); // Set selected image URI
+    }
+  };
+
   const updateProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -84,17 +103,14 @@ const EditProfileScreen = () => {
     }
   };
 
-  // Show date picker
   const showDatePicker = () => {
     setDatePickerVisible(true);
   };
 
-  // Hide date picker
   const hideDatePicker = () => {
     setDatePickerVisible(false);
   };
 
-  // Handle date picked
   const handleConfirm = (date) => {
     setBirth(date);
     hideDatePicker();
@@ -105,52 +121,25 @@ const EditProfileScreen = () => {
       {/* Profile Image */}
       <View style={styles.imageContainer}>
         <Image source={profileImage ? { uri: profileImage } : require('../assets/me.jpg')} style={styles.profileImage} />
-        <TouchableOpacity style={styles.editIcon}>
+        <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
           <Icon name="camera-outline" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Edit Profile Header */}
+      {/* Rest of the form */}
       <Text style={styles.header}>Edit Profile</Text>
 
-      {/* Input Fields */}
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="User Name"
-          value={UserName}
-          onChangeText={setUserName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-        />
+        <TextInput style={styles.input} placeholder="User Name" value={UserName} onChangeText={setUserName} />
+        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
         <View style={styles.phoneContainer}>
           <Text style={styles.countryCode}>+92</Text>
-          <TextInput
-            style={styles.phoneInput}
-            placeholder="Phone Number"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-          />
+          <TextInput style={styles.phoneInput} placeholder="Phone Number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" />
         </View>
-
-        {/* Date of Birth Picker */}
         <TouchableOpacity style={styles.input} onPress={showDatePicker}>
           <Text>{birth ? birth.toDateString() : 'Select Date of Birth'}</Text>
         </TouchableOpacity>
-        <DateTimePickerModal
-          isVisible={isDatePickerVisible}
-          mode="date"
-          onConfirm={handleConfirm}
-          onCancel={hideDatePicker}
-          date={birth}
-        />
-
-        {/* Gender Picker */}
+        <DateTimePickerModal isVisible={isDatePickerVisible} mode="date" onConfirm={handleConfirm} onCancel={hideDatePicker} date={birth} />
         <RNPickerSelect
           onValueChange={(value) => setGender(value)}
           items={[
@@ -164,7 +153,6 @@ const EditProfileScreen = () => {
         />
       </View>
 
-      {/* Save Changes Button */}
       <TouchableOpacity style={styles.saveChangesButton} onPress={updateProfile}>
         <Text style={styles.saveChangesText}>Save Changes</Text>
       </TouchableOpacity>
