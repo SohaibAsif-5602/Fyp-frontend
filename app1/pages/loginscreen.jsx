@@ -144,7 +144,7 @@ const LoginScreen = () => {
           // Store the push token in the database
           const authToken = response.data.token;
           await axios.post(
-            process.env.EXPO_PUBLIC_API_URL + '/api/store-notification-token',
+            process.env.EXPO_PUBLIC_API_URL + '/api/notifications/store-notification-token',
             { notification_token: token },
             {
               headers: {

@@ -17,12 +17,28 @@ export const sendPushNotification = async (userId, token, title, body) => {
     });
 
     try {
-        await axios.post('http://localhost:8080/api/notifications', {
-            userId: userId,
-            notification_title: title,
-            notification_body: body,
+
+           const  notification_title= title;
+           const notification_body= body;
+        
+
+
+        if (!userId || !notification_title || !notification_body) {
+            return res.status(400).json({ msg: 'Please provide all required fields' });
+        }
+    
+        const query = 'INSERT INTO notifications (user_id, notification_title, notification_body) VALUES (?, ?, ?)';
+        db.query(query, [userId, notification_title, notification_body], (err, result) => {
+            if (err) {
+                console.error('Error inserting notification:', err);
+                return res.status(500).json({ msg: 'Failed to store notification' });
+            }
+    
+            res.status(201).json({ msg: 'Notification stored successfully', notification_id: result.insertId });
         });
     } catch (error) {
         console.error('Error storing notification:', error);
     }
 };
+
+

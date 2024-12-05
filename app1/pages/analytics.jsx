@@ -38,7 +38,7 @@ export default function Analytics() {
           return;
         }
 
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+`/getPondData/${pondId}`, {
+        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+`/api/ponds/getPondData/${pondId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ export default function Analytics() {
         return;
       }
   
-      const response = await axios.delete(`${process.env.EXPO_PUBLIC_API_URL}/delete-pond/${pondId}`, {
+      const response = await axios.delete(`${process.env.EXPO_PUBLIC_API_URL}/api/ponds/delete-pond/${pondId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ export default function Analytics() {
       if (response.status === 200) {
         console.log('Pond deleted successfully.');
         
-        navigation.navigate('Maintabs'); 
+        navigation.navigate('MainTabs'); 
       } else {
         console.error('Failed to delete the pond. Status:', response.status);
       }

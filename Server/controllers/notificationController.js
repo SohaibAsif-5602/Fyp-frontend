@@ -1,28 +1,13 @@
 import db from '../db.js';
-import { sendPushNotification } from '../notificationService.js';
+import { sendPushNotification } from '../Services/notificationService.js';
+import { checkNotificationToken, insertNotificationToken } from '../Services/dbService.js';
+
 
 export const sendNotification = (req, res) => {
     sendPushNotification(18, 'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]', 'Test1 Notification', 'This is a test notification');
     res.status(200).json({ msg: 'Notification sent successfully' });
 };
 
-export const storeNotification = (req, res) => {
-    const { userId, notification_title, notification_body } = req.body;
-
-    if (!userId || !notification_title || !notification_body) {
-        return res.status(400).json({ msg: 'Please provide all required fields' });
-    }
-
-    const query = 'INSERT INTO notifications (user_id, notification_title, notification_body) VALUES (?, ?, ?)';
-    db.query(query, [userId, notification_title, notification_body], (err, result) => {
-        if (err) {
-            console.error('Error inserting notification:', err);
-            return res.status(500).json({ msg: 'Failed to store notification' });
-        }
-
-        res.status(201).json({ msg: 'Notification stored successfully', notification_id: result.insertId });
-    });
-};
 
 export const getNotifications = (req, res) => {
     const userId = req.userId; 
@@ -37,4 +22,29 @@ export const getNotifications = (req, res) => {
 
         res.status(200).json(results);
     });
+};
+
+
+export const storeNotificationToken = async (req, res) => {
+    const { notification_token: notificationToken } = req.body;
+    const userId = req.userId;
+
+    if (!notificationToken) {
+        return res.status(400).json({ msg: 'Notification token is required' });
+    }
+
+    try {
+        // Check if the token already exists
+        const existingTokens = await checkNotificationToken(userId, notificationToken);
+        if (existingTokens.length > 0) {
+            return res.status(200).json({ msg: 'Notification token already exists' });
+        }
+
+        // Insert the new token into the database
+        const result = await insertNotificationToken(userId, notificationToken);
+        res.status(201).json({ msg: 'Notification token stored successfully', notification_id: result.insertId });
+    } catch (error) {
+        console.error('Error processing notification token:', error);
+        res.status(500).json({ msg: 'An error occurred while storing the notification token' });
+    }
 };

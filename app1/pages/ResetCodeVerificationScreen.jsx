@@ -14,7 +14,7 @@ const ResetCodeVerificationScreen = ({ route, navigation }) => {
     }
 
     try {
-      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/verifyResetCode', { email, code: verificationCode });
+      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/verifyResetCode', { email, code: verificationCode });
       if (response.status === 200) {
         navigation.navigate('ResetPassword', { email, code: verificationCode });
       }

@@ -25,7 +25,7 @@ const EditProfileScreen = () => {
           return;
         }
 
-        const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/user`, {
+        const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/users`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -88,7 +88,7 @@ const EditProfileScreen = () => {
         gender: gender,
       };
 
-      const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/user`, data, {
+      const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/users`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

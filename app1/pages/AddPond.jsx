@@ -32,7 +32,7 @@ const AddPond = ({ navigation }) => {
             return;
           }
    
-            const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/add-pond', {
+            const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/api/ponds/add-pond', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

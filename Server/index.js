@@ -11,7 +11,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const secretKey = crypto.randomBytes(64).toString('hex');
 const saltrounds = 10;
 
 const db = sql.createConnection({
@@ -26,341 +25,15 @@ db.connect((err) => {
     console.log("Connected to database");
 });
 
-const sendPushNotification = async (userId, token, title, body) => {
-    const message = {
-        to: token,
-        sound: 'default',
-        title: title,
-        body: body,
-        data: { someData: 'goes here' },
-    };
 
-    // Send push notification
-    await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-    });
 
-    // Insert notification into the database
-    try {
-        await fetch('http://192.168.100.147:8080/api/notifications', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: userId,
-                notification_title: title,
-                notification_body: body,
-            }),
-        });
-    } catch (error) {
-        console.error('Error storing notification:', error);
-    }
-};
 
-app.post('/api/notifications', (req, res) => {
-    const { userId, notification_title, notification_body } = req.body;
 
-    if (!userId || !notification_title || !notification_body) {
-        return res.status(400).json({ msg: 'Please provide all required fields' });
-    }
 
-    const query = 'INSERT INTO notifications (user_id, notification_title, notification_body) VALUES (?, ?, ?)';
-    db.query(query, [userId, notification_title, notification_body], (err, result) => {
-        if (err) {
-            console.error('Error inserting notification:', err);
-            return res.status(500).json({ msg: 'Failed to store notification' });
-        }
 
-        res.status(201).json({ msg: 'Notification stored successfully', notification_id: result.insertId });
-    });
-});
+// 
 
-app.post('/send-notification', (req, res) => {
-    sendPushNotification(18,'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]','Test1 Notification','This is a test notification');
-    res.status(200).json({ msg: 'Notification sent successfully' });
-});
 
-
-
-
-// app.post('/signup',(req,res)=>{
-//     const {email,password,username}=req.body;
-    
-//     db.query("Select * from Users where email=?",[email],(err,result)=>{
-//         if(err) return res.status(500).json({msg:"Server Error 1"});
-//         if(result.length>0) return res.status(400).json({msg:"user already exists"})
-
-//     bcrypt.hash(password,saltrounds,(err,hash)=>{
-
-//         if(err) return res.status(500).json({msg:"Server Error 2"});
-
-//         db.query("Insert into Users(email,password,username) values(?,?,?)",[email,hash,username],(err,result)=>{
-//             if(err) return res.status(500).json({msg:"Error inserting in database"});
-//             res.status(201).json({msg:"User Registered Successfully"});
-//         })
-//     })
-//     });
-//  });
-
-
-
-
-
-
-
-
-//  app.post('/login', (req, res) => {
-//     const { email, password } = req.body;
-
-//     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
-//         if (err) return res.status(500).json("SQL Server error");
-//         if (result.length === 0) return res.status(400).json("User not found");
-
-//         const user = result[0];
-
-        
-
-//         bcrypt.compare(password, user.password, (err, isMatch) => {
-//             if (err) return res.status(500).json("Error comparing password");
-//             if (!isMatch) return res.status(400).json("Passwords do not match");
-
-//             const token = jwt.sign({ user: user.user_id }, secretKey, { expiresIn: '1h' });
-//             return res.status(200).json({ msg: "Login Successful", token });
-//         });
-//     });
-// });
-
-
-
-
-
-
-app.get('/getPonds', (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(403).json({ msg: "Token is required" });
-    }
-
-    jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ msg: "Invalid token" });
-        }
-
-        console.log('Decoded token:', decoded);
-        const userId = decoded.user;
-        console.log('User ID:', userId);
-
-        const query = `
-            SELECT
-                p.pond_id ,
-                p.pond_name, 
-                p.pond_loc, 
-                f.specie, 
-                f.imagelink, 
-                p.pond_score 
-            FROM Pond p
-            JOIN Fishgroup f ON p.fish_id = f.id
-            WHERE p.user_id = ?`;
-
-        db.query(query, [userId], (err, results) => {
-            if (err) {
-                console.error('Database query error:', err);
-                return res.status(500).json({ msg: "Database query error" });
-            }
-
-            return res.status(200).json({ ponds: results });
-        });
-    });
-});
-
-app.get('/getPondData/:pondId', (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const pondId = req.params.pondId;
-
-    if (!token) {
-        return res.status(403).json({ msg: 'Token is required' });
-    }
-
-    jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ msg: 'Invalid token' });
-        }
-
-        const userId = decoded.user;
-        
-        // Verify that the pond belongs to the user and fetch the channel ID and read key
-        const query = `
-            SELECT p.channel_id, p.pond_score, i.channel_read 
-            FROM Pond p 
-            JOIN Iot i ON p.channel_id = i.channel_id 
-            WHERE p.pond_id = ? AND p.user_id = ?`;
-        console.log('Pond ID:', pondId);
-        console.log('User ID:', userId);
-        db.query(query, [pondId, userId], (err, results) => {
-            if (err) {
-                console.error('Database query error:', err);
-                return res.status(500).json({ msg: 'Database query error' });
-            }
-
-            if (results.length === 0) {
-                return res.status(404).json({ msg: 'Pond not found or access denied' });
-            }
-
-            const { channel_id, pond_score, channel_read } = results[0];
-
-            // Fetch data from ThingSpeak using the channel ID and API read key
-            const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
-
-            axios.get(url)
-                .then(response => {
-                    const feeds = response.data.feeds;
-                    const formattedDates = feeds.map(feed => feed.created_at.split('T')[0]);
-
-                    const temperatureData = feeds.map(feed => ({
-                        date: feed.created_at.split('T')[0],
-                        value: parseFloat(feed.field1)
-                    }));
-
-                    const phData = feeds.map(feed => ({
-                        date: feed.created_at.split('T')[0],
-                        value: parseFloat(feed.field2)
-                    }));
-
-                    const turbidityData = feeds.map(feed => ({
-                        date: feed.created_at.split('T')[0],
-                        value: parseFloat(feed.field3)
-                    }));
-
-                    // Send response containing pond health score and ThingSpeak data
-                    res.status(200).json({
-                        pond_score: pond_score,
-                        temperatureData: temperatureData,
-                        phData: phData,
-                        turbidityData: turbidityData,
-                        dates: [...new Set(formattedDates)]
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching data from ThingSpeak:', error);
-                    res.status(500).json({ msg: 'Error fetching data from ThingSpeak' });
-                });
-        });
-    });
-});
-
-app.post('/add-pond', async (req, res) => {
-    const { channelName, location, fishSpecies, fishAge } = req.body;
-
-    // Extract token from the Authorization header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(403).json({ msg: 'Token is required' });
-    }
-
-    // Verify the token to extract userId
-    jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ msg: 'Invalid token' });
-        }
-
-        const userId = decoded.user;
-
-        if (!channelName || !location || !fishSpecies || !fishAge || !userId) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
-
-        let channelId, fishId;
-
-        // Step 1: Create a channel on ThingSpeak
-        axios.post('https://api.thingspeak.com/channels.json', {
-            api_key: 'Q8PT7VOXW47SYUWJ',
-            name: channelName,
-            public_flag: true,
-            field1: 'Temperature',
-            field2: 'pH',
-            field3: 'Dissolved_oxygen',
-        })
-            .then(channelResponse => {
-                channelId = channelResponse.data.id;
-
-                let writeApiKey = '';
-                let readApiKey = '';
-
-                // Extract the API keys
-                channelResponse.data.api_keys.forEach((key) => {
-                    if (key.write_flag) {
-                        writeApiKey = key.api_key;
-                    } else {
-                        readApiKey = key.api_key;
-                    }
-                });
-
-                // Insert ThingSpeak data into the Iot table
-                db.query(
-                    'INSERT INTO Iot (channel_id, channel_read, channel_write) VALUES (?, ?, ?)',
-                    [channelId, readApiKey, writeApiKey],
-                    (error) => {
-                        if (error) {
-                            console.error('Error inserting ThingSpeak data into the database:', error);
-                            return res.status(500).json({ error: 'Failed to insert ThingSpeak data into the database' });
-                        }
-
-                        // Proceed to insert fish data
-                        insertFishData();
-                    }
-                );
-            })
-            .catch(error => {
-                console.error('Error creating ThingSpeak channel:', error);
-                return res.status(500).json({ error: 'Failed to create channel on ThingSpeak' });
-            });
-
-        // Function to insert fish data
-        function insertFishData() {
-            db.query(
-                'INSERT INTO Fishgroup (age, specie, imagelink) VALUES (?, ?, ?)',
-                [fishAge, fishSpecies, 'default_image_link'], // Replace with actual image link if available
-                (error, fishResult) => {
-                    if (error) {
-                        console.error('Error inserting fish data into the database:', error);
-                        return res.status(500).json({ error: 'Failed to insert fish data into the database' });
-                    }
-
-                    fishId = fishResult.insertId;
-                    insertPondData();
-                }
-            );
-        }
-
-        function insertPondData() {
-            db.query(
-                'INSERT INTO Pond (channel_id, pond_name, pond_loc, fish_id, user_id, pond_score) VALUES (?, ?, ?, ?, ?, ?)',
-                [channelId, channelName, location, fishId, userId, 0], // Assuming pond_score is initialized to 0
-                (error) => {
-                    if (error) {
-                        console.error('Error inserting pond data into the database:', error);
-                        return res.status(500).json({ error: 'Failed to insert pond data into the database' });
-                    }
-
-                    // Send the success response
-                    res.status(200).json({ message: 'Pond and channel created successfully' });
-                }
-            );
-        }
-    });
-});
 
 app.post('/sendEmail', (req, res) => {
     const { email } = req.body;
@@ -425,6 +98,8 @@ app.post('/sendEmail', (req, res) => {
     });
 });
 
+
+
 app.post('/verifyCode', (req, res) => {
     const { email, code } = req.body;
 
@@ -454,6 +129,9 @@ app.post('/verifyCode', (req, res) => {
         }
     });
 });
+
+
+
 
 app.post('/sendResetCode', (req, res) => {
     const { email } = req.body;
@@ -508,6 +186,9 @@ app.post('/sendResetCode', (req, res) => {
     });
 });
 
+
+
+
 // Verify reset code
 app.post('/verifyResetCode', (req, res) => {
     const { email, code } = req.body;
@@ -528,6 +209,11 @@ app.post('/verifyResetCode', (req, res) => {
         }
     });
 });
+
+
+
+
+
 
 // Reset password
 app.post('/resetPassword', (req, res) => {
@@ -564,6 +250,11 @@ app.post('/resetPassword', (req, res) => {
         });
     });
 });
+
+
+
+
+
 
 
 app.post('/create-channel', async (req, res) => {
@@ -666,6 +357,7 @@ app.listen(8081, '0.0.0.0', () => {
 
 
 
+
 function verifyToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -744,124 +436,482 @@ function deleteRecords(channel_id, fish_id, pondId, res) {
     });
 }
 
-// DELETE Pond API
-app.delete('/delete-pond/:pondId', verifyToken, (req, res) => {
-    const userId = req.userId;
-    const pondId = req.params.pondId;
-
-    // Check if the pond belongs to the user
-    const verifyQuery = 'SELECT pond_id, channel_id, fish_id FROM Pond WHERE pond_id = ? AND user_id = ?';
-    db.query(verifyQuery, [pondId, userId], (err, results) => {
-        if (err) {
-            console.error('Database query error:', err);
-            return res.status(500).json({ msg: "Database query error" });
-        }
-
-        if (results.length === 0) {
-            return res.status(404).json({ msg: "Pond not found or does not belong to the user." });
-        }
-
-        const { channel_id, fish_id } = results[0];
-
-        // Call the deleteRecords function
-        deleteRecords(channel_id, fish_id, pondId, res);
-    });
-});
+// 
 
 
-app.get('/api/user', verifyToken, (req, res) => {
-    const userId = req.userId; // Extracted from the token by verifyToken
+// app.post('/api/store-notification-token', verifyToken, (req, res) => {
+//     const { notification_token } = req.body;
+//     const userId = req.userId;
 
-    const query = 'SELECT user_id, email, username, date_of_joining, imagelink, D_O_B, contact_no, gender FROM Users WHERE user_id = ?';
+//     if (!notification_token) {
+//         return res.status(400).json({ msg: "Notification token is required" });
+//     }
+
+//     // Check if the token already exists in the database
+//     const checkQuery = 'SELECT * FROM not_token_table WHERE user_id = ? AND notification_token = ?';
     
-    db.query(query, [userId], (err, result) => {
-        if (err) {
-            return res.status(500).json({ msg: 'Database query error', error: err });
-        }
+//     db.query(checkQuery, [userId, notification_token], (err, results) => {
+//         if (err) {
+//             console.error('Error checking token in the database:', err);
+//             return res.status(500).json({ msg: "Failed to check notification token" });
+//         }
 
-        if (result.length === 0) {
-            return res.status(404).json({ msg: 'User not found' });
-        }
+//         // If the token already exists, do not insert
+//         if (results.length > 0) {
+//             return res.status(200).json({ msg: "Notification token already exists" });
+//         }
 
-        res.status(200).json(result[0]);
-    });
-});
+//         // If the token does not exist, insert it into the database
+//         const insertQuery = 'INSERT INTO not_token_table (user_id, notification_token) VALUES (?, ?)';
+//         db.query(insertQuery, [userId, notification_token], (err, result) => {
+//             if (err) {
+//                 console.error('Error inserting token into the database:', err);
+//                 return res.status(500).json({ msg: "Failed to store notification token" });
+//             }
+
+//             res.status(201).json({ msg: "Notification token stored successfully", notification_id: result.insertId });
+//         });
+//     });
+// });
 
 
 
-app.put('/api/user', verifyToken, (req, res) => {
-    const userId = req.userId; // Extracted from the token by verifyToken
-    const { username, email, imagelink, D_O_B, contact_no, gender } = req.body;
 
-    const query = `
-        UPDATE Users 
-        SET username = ?, email = ?, imagelink = ?, D_O_B = ?, contact_no = ?, gender = ?
-        WHERE user_id = ?
-    `;
 
-    db.query(
-        query, 
-        [username, email, imagelink, D_O_B, contact_no, gender, userId], 
-        (err, result) => {
-            if (err) {
-                return res.status(500).json({ msg: 'Database update error', error: err });
-            }
 
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ msg: 'User not found' });
-            }
 
-            res.status(200).json({ msg: 'User updated successfully' });
-        }
-    );
-});
 
-app.post('/api/store-notification-token', verifyToken, (req, res) => {
-    const { notification_token } = req.body;
-    const userId = req.userId;
 
-    if (!notification_token) {
-        return res.status(400).json({ msg: "Notification token is required" });
-    }
 
-    // Check if the token already exists in the database
-    const checkQuery = 'SELECT * FROM not_token_table WHERE user_id = ? AND notification_token = ?';
+
+
+
+
+
+//app.get('/getPonds', (req, res) => {
+    //     const authHeader = req.headers['authorization'];
+    //     const token = authHeader && authHeader.split(' ')[1];
     
-    db.query(checkQuery, [userId, notification_token], (err, results) => {
-        if (err) {
-            console.error('Error checking token in the database:', err);
-            return res.status(500).json({ msg: "Failed to check notification token" });
-        }
+    //     if (!token) {
+    //         return res.status(403).json({ msg: "Token is required" });
+    //     }
+    
+    //     jwt.verify(token, secretKey, (err, decoded) => {
+    //         if (err) {
+    //             return res.status(401).json({ msg: "Invalid token" });
+    //         }
+    
+    //         console.log('Decoded token:', decoded);
+    //         const userId = decoded.user;
+    //         console.log('User ID:', userId);
+    
+    //         const query = `
+    //             SELECT
+    //                 p.pond_id ,
+    //                 p.pond_name, 
+    //                 p.pond_loc, 
+    //                 f.specie, 
+    //                 f.imagelink, 
+    //                 p.pond_score 
+    //             FROM Pond p
+    //             JOIN Fishgroup f ON p.fish_id = f.id
+    //             WHERE p.user_id = ?`;
+    
+    //         db.query(query, [userId], (err, results) => {
+    //             if (err) {
+    //                 console.error('Database query error:', err);
+    //                 return res.status(500).json({ msg: "Database query error" });
+    //             }
+    
+    //             return res.status(200).json({ ponds: results });
+    //         });
+    //     });
+    // });
+    
 
-        // If the token already exists, do not insert
-        if (results.length > 0) {
-            return res.status(200).json({ msg: "Notification token already exists" });
-        }
+// app.put('/api/user', verifyToken, (req, res) => {
+//     const userId = req.userId; // Extracted from the token by verifyToken
+//     const { username, email, imagelink, D_O_B, contact_no, gender } = req.body;
 
-        // If the token does not exist, insert it into the database
-        const insertQuery = 'INSERT INTO not_token_table (user_id, notification_token) VALUES (?, ?)';
-        db.query(insertQuery, [userId, notification_token], (err, result) => {
+//     const query = `
+//         UPDATE Users 
+//         SET username = ?, email = ?, imagelink = ?, D_O_B = ?, contact_no = ?, gender = ?
+//         WHERE user_id = ?
+//     `;
+
+//     db.query(
+//         query, 
+//         [username, email, imagelink, D_O_B, contact_no, gender, userId], 
+//         (err, result) => {
+//             if (err) {
+//                 return res.status(500).json({ msg: 'Database update error', error: err });
+//             }
+
+//             if (result.affectedRows === 0) {
+//                 return res.status(404).json({ msg: 'User not found' });
+//             }
+
+//             res.status(200).json({ msg: 'User updated successfully' });
+//         }
+//     );
+// });
+
+
+
+// app.get('/api/user', verifyToken, (req, res) => {
+//     const userId = req.userId; // Extracted from the token by verifyToken
+
+//     const query = 'SELECT user_id, email, username, date_of_joining, imagelink, D_O_B, contact_no, gender FROM Users WHERE user_id = ?';
+    
+//     db.query(query, [userId], (err, result) => {
+//         if (err) {
+//             return res.status(500).json({ msg: 'Database query error', error: err });
+//         }
+
+//         if (result.length === 0) {
+//             return res.status(404).json({ msg: 'User not found' });
+//         }
+
+//         res.status(200).json(result[0]);
+//     });
+// });
+
+
+
+// app.get('/api/notifications', verifyToken, (req, res) => {
+//     const userId = req.userId; 
+
+//     const query = 'SELECT notification_id, notification_title, notification_body, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC';
+
+//     db.query(query, [userId], (err, results) => {
+//         if (err) {
+//             console.error('Error fetching notifications:', err);
+//             return res.status(500).json({ msg: 'Failed to fetch notifications' });
+//         }
+
+//         res.status(200).json(results);
+//     });
+// });
+
+
+
+// const sendPushNotification = async (userId, token, title, body) => {
+//     const message = {
+//         to: token,
+//         sound: 'default',
+//         title: title,
+//         body: body,
+//         data: { someData: 'goes here' },
+//     };
+
+//     // Send push notification
+//     await fetch('https://exp.host/--/api/v2/push/send', {
+//         method: 'POST',
+//         headers: {
+//             Accept: 'application/json',
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(message),
+//     });
+
+//     // Insert notification into the database
+//     try {
+//         await fetch('http://192.168.100.147:8080/api/notifications', {
+//             method: 'POST',
+//             headers: {
+//                 Accept: 'application/json',
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify({
+//                 userId: userId,
+//                 notification_title: title,
+//                 notification_body: body,
+//             }),
+//         });
+//     } catch (error) {
+//         console.error('Error storing notification:', error);
+//     }
+// };
+
+// app.post('/api/notifications', (req, res) => {
+//     const { userId, notification_title, notification_body } = req.body;
+
+//     if (!userId || !notification_title || !notification_body) {
+//         return res.status(400).json({ msg: 'Please provide all required fields' });
+//     }
+
+//     const query = 'INSERT INTO notifications (user_id, notification_title, notification_body) VALUES (?, ?, ?)';
+//     db.query(query, [userId, notification_title, notification_body], (err, result) => {
+//         if (err) {
+//             console.error('Error inserting notification:', err);
+//             return res.status(500).json({ msg: 'Failed to store notification' });
+//         }
+
+//         res.status(201).json({ msg: 'Notification stored successfully', notification_id: result.insertId });
+//     });
+// });
+
+// app.post('/send-notification', (req, res) => {
+//     sendPushNotification(18,'ExponentPushToken[1EYGIYPdvYHFQOD1mFoPun]','Test1 Notification','This is a test notification');
+//     res.status(200).json({ msg: 'Notification sent successfully' });
+// });
+
+
+
+
+// app.post('/signup',(req,res)=>{
+//     const {email,password,username}=req.body;
+    
+//     db.query("Select * from Users where email=?",[email],(err,result)=>{
+//         if(err) return res.status(500).json({msg:"Server Error 1"});
+//         if(result.length>0) return res.status(400).json({msg:"user already exists"})
+
+//     bcrypt.hash(password,saltrounds,(err,hash)=>{
+
+//         if(err) return res.status(500).json({msg:"Server Error 2"});
+
+//         db.query("Insert into Users(email,password,username) values(?,?,?)",[email,hash,username],(err,result)=>{
+//             if(err) return res.status(500).json({msg:"Error inserting in database"});
+//             res.status(201).json({msg:"User Registered Successfully"});
+//         })
+//     })
+//     });
+//  });
+
+
+
+
+
+
+
+
+//  app.post('/login', (req, res) => {
+//     const { email, password } = req.body;
+
+//     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
+//         if (err) return res.status(500).json("SQL Server error");
+//         if (result.length === 0) return res.status(400).json("User not found");
+
+//         const user = result[0];
+
+        
+
+//         bcrypt.compare(password, user.password, (err, isMatch) => {
+//             if (err) return res.status(500).json("Error comparing password");
+//             if (!isMatch) return res.status(400).json("Passwords do not match");
+
+//             const token = jwt.sign({ user: user.user_id }, secretKey, { expiresIn: '1h' });
+//             return res.status(200).json({ msg: "Login Successful", token });
+//         });
+//     });
+// });
+
+
+
+app.post('/api/auth/add-pond', async (req, res) => {
+        const { channelName, location, fishSpecies, fishAge } = req.body;
+    
+        // Extract token from the Authorization header
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+    
+        if (!token) {
+            return res.status(403).json({ msg: 'Token is required' });
+        }
+    
+        // Verify the token to extract userId
+        jwt.verify(token, secretKey, (err, decoded) => {
             if (err) {
-                console.error('Error inserting token into the database:', err);
-                return res.status(500).json({ msg: "Failed to store notification token" });
+                return res.status(401).json({ msg: 'Invalid token' });
             }
-
-            res.status(201).json({ msg: "Notification token stored successfully", notification_id: result.insertId });
+    
+            const userId = decoded.user;
+    
+            if (!channelName || !location || !fishSpecies || !fishAge || !userId) {
+                return res.status(400).json({ error: 'All fields are required' });
+            }
+    
+            let channelId, fishId;
+    
+            // Step 1: Create a channel on ThingSpeak
+            axios.post('https://api.thingspeak.com/channels.json', {
+                api_key: 'Q8PT7VOXW47SYUWJ',
+                name: channelName,
+                public_flag: true,
+                field1: 'Temperature',
+                field2: 'pH',
+                field3: 'Dissolved_oxygen',
+            })
+                .then(channelResponse => {
+                    channelId = channelResponse.data.id;
+    
+                    let writeApiKey = '';
+                    let readApiKey = '';
+    
+                    // Extract the API keys
+                    channelResponse.data.api_keys.forEach((key) => {
+                        if (key.write_flag) {
+                            writeApiKey = key.api_key;
+                        } else {
+                            readApiKey = key.api_key;
+                        }
+                    });
+    
+                    // Insert ThingSpeak data into the Iot table
+                    db.query(
+                        'INSERT INTO Iot (channel_id, channel_read, channel_write) VALUES (?, ?, ?)',
+                        [channelId, readApiKey, writeApiKey],
+                        (error) => {
+                            if (error) {
+                                console.error('Error inserting ThingSpeak data into the database:', error);
+                                return res.status(500).json({ error: 'Failed to insert ThingSpeak data into the database' });
+                            }
+    
+                            // Proceed to insert fish data
+                            insertFishData();
+                        }
+                    );
+                })
+                .catch(error => {
+                    console.error('Error creating ThingSpeak channel:', error);
+                    return res.status(500).json({ error: 'Failed to create channel on ThingSpeak' });
+                });
+    
+            // Function to insert fish data
+            function insertFishData() {
+                db.query(
+                    'INSERT INTO Fishgroup (age, specie, imagelink) VALUES (?, ?, ?)',
+                    [fishAge, fishSpecies, 'default_image_link'], // Replace with actual image link if available
+                    (error, fishResult) => {
+                        if (error) {
+                            console.error('Error inserting fish data into the database:', error);
+                            return res.status(500).json({ error: 'Failed to insert fish data into the database' });
+                        }
+    
+                        fishId = fishResult.insertId;
+                        insertPondData();
+                    }
+                );
+            }
+    
+            function insertPondData() {
+                db.query(
+                    'INSERT INTO Pond (channel_id, pond_name, pond_loc, fish_id, user_id, pond_score) VALUES (?, ?, ?, ?, ?, ?)',
+                    [channelId, channelName, location, fishId, userId, 0], // Assuming pond_score is initialized to 0
+                    (error) => {
+                        if (error) {
+                            console.error('Error inserting pond data into the database:', error);
+                            return res.status(500).json({ error: 'Failed to insert pond data into the database' });
+                        }
+    
+                        // Send the success response
+                        res.status(200).json({ message: 'Pond and channel created successfully' });
+                    }
+                );
+            }
         });
     });
-});
+    
 
-app.get('/api/notifications', verifyToken, (req, res) => {
-    const userId = req.userId; 
 
-    const query = 'SELECT notification_id, notification_title, notification_body, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC';
+    // DELETE Pond API
+// app.delete('/delete-pond/:pondId', verifyToken, (req, res) => {
+//     const userId = req.userId;
+//     const pondId = req.params.pondId;
 
-    db.query(query, [userId], (err, results) => {
-        if (err) {
-            console.error('Error fetching notifications:', err);
-            return res.status(500).json({ msg: 'Failed to fetch notifications' });
-        }
+//     // Check if the pond belongs to the user
+//     const verifyQuery = 'SELECT pond_id, channel_id, fish_id FROM Pond WHERE pond_id = ? AND user_id = ?';
+//     db.query(verifyQuery, [pondId, userId], (err, results) => {
+//         if (err) {
+//             console.error('Database query error:', err);
+//             return res.status(500).json({ msg: "Database query error" });
+//         }
 
-        res.status(200).json(results);
-    });
-});
+//         if (results.length === 0) {
+//             return res.status(404).json({ msg: "Pond not found or does not belong to the user." });
+//         }
+
+//         const { channel_id, fish_id } = results[0];
+
+//         // Call the deleteRecords function
+//         deleteRecords(channel_id, fish_id, pondId, res);
+//     });
+//  });
+//
+
+//app.get('/getPondData/:pondId', (req, res) => {
+    //     const authHeader = req.headers['authorization'];
+    //     const token = authHeader && authHeader.split(' ')[1];
+    //     const pondId = req.params.pondId;
+    
+    //     if (!token) {
+    //         return res.status(403).json({ msg: 'Token is required' });
+    //     }
+    
+    //     jwt.verify(token, secretKey, (err, decoded) => {
+    //         if (err) {
+    //             return res.status(401).json({ msg: 'Invalid token' });
+    //         }
+    
+    //         const userId = decoded.user;
+            
+    //         // Verify that the pond belongs to the user and fetch the channel ID and read key
+    //         const query = `
+    //             SELECT p.channel_id, p.pond_score, i.channel_read 
+    //             FROM Pond p 
+    //             JOIN Iot i ON p.channel_id = i.channel_id 
+    //             WHERE p.pond_id = ? AND p.user_id = ?`;
+    //         console.log('Pond ID:', pondId);
+    //         console.log('User ID:', userId);
+    //         db.query(query, [pondId, userId], (err, results) => {
+    //             if (err) {
+    //                 console.error('Database query error:', err);
+    //                 return res.status(500).json({ msg: 'Database query error' });
+    //             }
+    
+    //             if (results.length === 0) {
+    //                 return res.status(404).json({ msg: 'Pond not found or access denied' });
+    //             }
+    
+    //             const { channel_id, pond_score, channel_read } = results[0];
+    
+    //             // Fetch data from ThingSpeak using the channel ID and API read key
+    //             const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
+    
+    //             axios.get(url)
+    //                 .then(response => {
+    //                     const feeds = response.data.feeds;
+    //                     const formattedDates = feeds.map(feed => feed.created_at.split('T')[0]);
+    
+    //                     const temperatureData = feeds.map(feed => ({
+    //                         date: feed.created_at.split('T')[0],
+    //                         value: parseFloat(feed.field1)
+    //                     }));
+    
+    //                     const phData = feeds.map(feed => ({
+    //                         date: feed.created_at.split('T')[0],
+    //                         value: parseFloat(feed.field2)
+    //                     }));
+    
+    //                     const turbidityData = feeds.map(feed => ({
+    //                         date: feed.created_at.split('T')[0],
+    //                         value: parseFloat(feed.field3)
+    //                     }));
+    
+    //                     // Send response containing pond health score and ThingSpeak data
+    //                     res.status(200).json({
+    //                         pond_score: pond_score,
+    //                         temperatureData: temperatureData,
+    //                         phData: phData,
+    //                         turbidityData: turbidityData,
+    //                         dates: [...new Set(formattedDates)]
+    //                     });
+    //                 })
+    //                 .catch(error => {
+    //                     console.error('Error fetching data from ThingSpeak:', error);
+    //                     res.status(500).json({ msg: 'Error fetching data from ThingSpeak' });
+    //                 });
+    //         });
+    //     });
+    // });
+    

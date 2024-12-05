@@ -14,7 +14,7 @@ const CodeVerificationScreen = ({ route, navigation }) => {
     }
 
     try {
-      const verifyResponse = await fetch(process.env.EXPO_PUBLIC_API_URL + '/verifyCode', {
+      const verifyResponse = await fetch(process.env.EXPO_PUBLIC_API_URL + '/api/auth/verifyCode', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

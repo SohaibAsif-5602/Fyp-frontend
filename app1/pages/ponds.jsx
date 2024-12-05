@@ -24,7 +24,7 @@ const PondList = () => {
             return;
           }
 
-          const response = await fetch(process.env.EXPO_PUBLIC_API_URL + '/getPonds', {
+          const response = await fetch(process.env.EXPO_PUBLIC_API_URL + '/api/ponds/get-ponds', {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token}`,

@@ -12,7 +12,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     }
 
     try {
-      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/sendResetCode', { email });
+      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/sendResetCode', { email });
       if (response.status === 200) {
         navigation.navigate('ResetCodeVerification', { email });
       }

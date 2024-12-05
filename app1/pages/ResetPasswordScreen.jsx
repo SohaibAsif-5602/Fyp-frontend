@@ -19,7 +19,7 @@ const ResetPasswordScreen = ({ route, navigation }) => {
     }
 
     try {
-      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/resetPassword', {
+      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/resetPassword', {
         email,
         code,
         newPassword,

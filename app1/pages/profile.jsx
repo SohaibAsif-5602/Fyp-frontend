@@ -26,7 +26,7 @@ const ProfileScreen = () => {
           return;
         }
 
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+'/api/user', {
+        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+'/api/users', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
