@@ -25,6 +25,7 @@ export const getPondData = (req, res) => {
         }
 
         const { channel_id, pond_score, channel_read } = results[0];
+        console.log(channel_id,channel_read);
         const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
 
         axios.get(url)

@@ -1,4 +1,5 @@
 import db from '../db.js';
+import axios from 'axios';
 
 export const checkUserExists = (email) => {
     return new Promise((resolve, reject) => {
@@ -114,6 +115,23 @@ export async function deleteRecords(channel_id, fish_id, pondId, res) {
         // Delete the fish data
         await dbQuery('DELETE FROM Fishgroup WHERE id = ?', [fish_id]);
 
+        
+        const thingSpeakResponse = await axios.delete(
+            `https://api.thingspeak.com/channels/${channel_id}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                params: {
+                    api_key: process.env.THINGSPEAK_API_KEY,
+                },
+            }
+        );
+
+        if (thingSpeakResponse.status !== 200) {
+            throw new Error('Failed to delete the ThingSpeak channel.');
+        }
+
         // Commit the transaction
         await new Promise((resolve, reject) => {
             db.commit((err) => {
@@ -122,7 +140,7 @@ export async function deleteRecords(channel_id, fish_id, pondId, res) {
             });
         });
 
-        res.status(200).json({ msg: "Pond and related data deleted successfully." });
+        res.status(200).json({ msg: "Pond and related data deleted successfully, including ThingSpeak channel." });
     } catch (error) {
         // Rollback the transaction in case of any error
         db.rollback(() => {

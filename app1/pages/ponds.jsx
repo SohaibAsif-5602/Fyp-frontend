@@ -56,7 +56,7 @@ const PondList = () => {
     // Measure the position of the browse icon
     browseIconRefs.current[index]?.measure(
       (x, y, width, height, pageX, pageY) => {
-        setModalPosition({ top:( pageY + height / 2)-100, left: pageX - 120 }); // Adjusted `left` for left alignment
+        setModalPosition({ top:( pageY + height / 2)-50, left: pageX - 120 }); // Adjusted `left` for left alignment
         setSelectedPond(pond);
         setModalVisible(true);
       }

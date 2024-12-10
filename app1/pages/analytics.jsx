@@ -27,7 +27,7 @@ export default function Analytics() {
   const [fishHealth, setFishHealth] = useState(72);
   const [suggestions, setSuggestions] = useState(['Add Ammonia', 'Cool Water Slightly']);
   const [loading, setLoading] = useState(true);
-
+  const [lastDateData, setLastDateData] = useState(null); // Store last date data
   useEffect(() => {
     const fetchPondData = async () => {
       try {
@@ -38,7 +38,7 @@ export default function Analytics() {
           return;
         }
 
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+`/api/ponds/getPondData/${pondId}`, {
+        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + `/api/ponds/getPondData/${pondId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -46,12 +46,22 @@ export default function Analytics() {
         });
 
         if (response.status === 200) {
+          console.log('Pond data fetched successfully:', response.data);
           const { temperatureData, phData, turbidityData, dates, pond_score } = response.data;
           setDates([...new Set(dates)]);
           setTemperatureData(temperatureData);
           setPhData(phData);
           setTurbidityData(turbidityData);
           setFishHealth(pond_score);
+
+          // Find the latest date and corresponding data
+          const lastDate = dates[dates.length - 1];
+          const lastPh = phData.find(data => data.date === lastDate)?.value?.toFixed(2) || 'N/A';
+          const lastTemp = temperatureData.find(data => data.date === lastDate)?.value?.toFixed(2) || 'N/A';
+          const lastTurbidity = turbidityData.find(data => data.date === lastDate)?.value?.toFixed(2) || 'N/A';
+
+
+          setLastDateData({ date: lastDate, ph: lastPh, temperature: lastTemp, turbidity: lastTurbidity });
           setLoading(false);
         } else {
           console.error('Failed to fetch pond data. Status:', response.status);
@@ -64,7 +74,7 @@ export default function Analytics() {
     };
 
     if (pondId) {
-      fetchPondData(); // Only fetch data if pondId is available
+      fetchPondData();
     }
   }, [pondId]);
 
@@ -129,6 +139,7 @@ export default function Analytics() {
           </View>
         ) : (
           <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }}>
+            
             <LineChart
               data={{
                 labels: labels,
@@ -165,6 +176,29 @@ export default function Analytics() {
   return (
     <View style={styles.container}>
       <ScrollView>
+      {lastDateData && (
+  <View style={styles.lastDateContainer}>
+    <Text style={styles.lastDateTitle}>Last Updated Data</Text>
+    <View style={styles.lastDateRow}>
+      <Text style={styles.dateBox}>{lastDateData.date || 'N/A'}</Text>
+    </View>
+    <View style={styles.lastDateValuesRow}>
+      <View style={styles.valueBox}>
+        <Text style={styles.valueLabel}>pH</Text>
+        <Text style={styles.valueText}>{lastDateData.ph}</Text>
+      </View>
+      <View style={styles.valueBox}>
+        <Text style={styles.valueLabel}>Temperature</Text>
+        <Text style={styles.valueText}>{lastDateData.temperature}</Text>
+      </View>
+      <View style={styles.valueBox}>
+        <Text style={styles.valueLabel}>Turbidity</Text>
+        <Text style={styles.valueText}>{lastDateData.turbidity}</Text>
+      </View>
+    </View>
+  </View>
+)}
+
         {/* Picker container to hold both pickers in a row */}
         <View style={styles.pickerContainer}>
           <RNPickerSelect
@@ -197,13 +231,6 @@ export default function Analytics() {
           Fish Health - <Text style={styles.fishHealthValue}>{fishHealth}%</Text> Okay
         </Text>
 
-        <View style={styles.suggestionsContainer}>
-          <Text style={styles.suggestionsHeader}>Suggestions</Text>
-          {suggestions.map((suggestion, index) => (
-            <Text key={index} style={styles.suggestionItem}>• {suggestion}</Text>
-          ))}
-        </View>
-
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlertHistory')}>
             <Text style={styles.buttonText}>View Alerts History</Text>
@@ -223,6 +250,61 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f8ff',
+  },
+  lastDateContainer: {
+    padding: 15,
+    margin: 15,
+    backgroundColor: '#e6f7ff',
+    borderRadius: 10,
+    elevation: 2,
+  },
+  lastDateTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007bff',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  lastDateRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  dateBox: {
+    padding: 7,
+    width: '40%',
+    fontSize: 19,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginHorizontal: 5,
+    borderColor: '#ffffff',
+    borderWidth: 2,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+  },
+  lastDateValuesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  valueBox: {
+    backgroundColor: '#ffffff',
+    padding: 5,
+    borderRadius: 10,
+    elevation: 2,
+    alignItems: 'center',
+    width: '30%',
+  },
+  valueLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 5,
+    fontWeight: 'bold',
+  },
+  valueText: {
+    fontSize: 18,
+    color: '#007bff',
+    fontWeight: 'bold',
   },
   pickerContainer: {
     flexDirection: 'row',
@@ -265,32 +347,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     width: '90%',
     marginLeft: '5%',
-    backgroundColor: '#007bff',
     fontSize: 26,
     textAlign: 'center',
     marginVertical: 10,
     paddingVertical: 20,
-    color: '#fff',
-  },
+    borderColor: '#ffcc00',
+    },
   fishHealthValue: {
     fontWeight: 'bold',
     color: '#ffcc00',
   },
-  suggestionsContainer: {
-    borderRadius: 20,
-    width: '90%',
-    marginLeft: '5%',
-    backgroundColor: '#e6ffe6',
-    padding: 15,
-    marginVertical: 10,
-  },
-  suggestionsHeader: {
-    fontWeight: 'bold',
-    fontSize: 24,
-    marginBottom: 10,
-    color: '#2c3e50',
-  },
-  suggestionItem: {
+  noDataText: {
     fontSize: 18,
     color: '#333',
   },
@@ -321,9 +388,7 @@ const styles = StyleSheet.create({
 
 const pickerSelectStyles = StyleSheet.create({
   inputAndroid: {
-    fontSize: 16,
-    width:150,
-    borderRadius:200,
+    width:140,
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderWidth: 1,
@@ -332,6 +397,8 @@ const pickerSelectStyles = StyleSheet.create({
     color: 'black',
     paddingRight: 30,
     backgroundColor: '#e0f7fa',
+        color: '#007bff',
+
     marginHorizontal: 5,
   },
 });
