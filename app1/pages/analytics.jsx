@@ -46,7 +46,6 @@ export default function Analytics() {
         });
 
         if (response.status === 200) {
-          console.log('Pond data fetched successfully:', response.data);
           const { temperatureData, phData, turbidityData, dates, pond_score } = response.data;
           setDates([...new Set(dates)]);
           setTemperatureData(temperatureData);

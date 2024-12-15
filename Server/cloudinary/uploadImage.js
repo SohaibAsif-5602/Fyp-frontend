@@ -1,29 +1,16 @@
-const cloudinary = require('./cloudinary'); // Import the configured Cloudinary instance
+import cloudinary from './cloudinaryConfig.js';
 
-/**
- * Upload image to Cloudinary
- * @param {string} imagePath - The path of the image to upload
- * @param {string} folder - The folder in Cloudinary where the image will be stored
- * @returns {Promise<object>} - Returns a promise that resolves with Cloudinary response
- */
-const uploadImageToCloudinary = async (imagePath, folder) => {
+const uploadImageToCloudinary = async (filePath) => {
   try {
-    const result = await cloudinary.uploader.upload(imagePath, {
-      folder: Machiro, // Specify the folder in Cloudinary
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: 'Machiro', // Optional: Specify folder in Cloudinary
     });
-
     return {
-      success: true,
-      url: result.secure_url, // The URL of the uploaded image
-      public_id: result.public_id, // The unique public ID of the uploaded image
+      url: result.secure_url,
+      public_id: result.public_id,
     };
   } catch (error) {
-    console.error('Error uploading image to Cloudinary:', error);
-    return {
-      success: false,
-      error: error.message,
-    };
+    throw new Error(`Image upload failed: ${error.message}`);
   }
 };
-
-module.exports = uploadImageToCloudinary;
+export default uploadImageToCloudinary;

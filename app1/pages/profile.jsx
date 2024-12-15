@@ -41,7 +41,7 @@ const ProfileScreen = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [navigation]);
 
   const logout = async () => {
     console.log('Logging out...');

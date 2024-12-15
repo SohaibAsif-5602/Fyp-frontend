@@ -2,20 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import RNPickerSelect from 'react-native-picker-select';
-import * as ImagePicker from 'expo-image-picker'; // Import ImagePicker
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import the modal date picker
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const EditProfileScreen = () => {
   const [UserName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [birth, setBirth] = useState(new Date()); // State for date of birth
+  const [birth, setBirth] = useState(new Date());
   const [gender, setGender] = useState('');
   const [profileImage, setProfileImage] = useState(null);
-  const [isDatePickerVisible, setDatePickerVisible] = useState(false); // State to show/hide date picker
-
+  const [imageFile, setImageFile] = useState(null); // To store the image file
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+const [pickedImage, setPickedImage] = useState(null);
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -50,58 +51,78 @@ const EditProfileScreen = () => {
   }, []);
 
   const pickImage = async () => {
-    // Request permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Permission to access media library is required!');
-      return;
+        Alert.alert('Permission Denied', 'Permission to access media library is required!');
+        return;
     }
 
-    // Open image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [4, 3],
       quality: 1,
+      base64: true,
     });
+  
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri); // Set selected image URI
+      const fixImage = result.assets[0];
+        setPickedImage(fixImage)  // Ensure this is correct
+        console.log('Picked Image:', pickedImage);
+        setProfileImage(fixImage.uri);
+        setImageFile({
+          base64: pickedImage.base64,
+            uri: pickedImage.uri,
+            name: pickedImage.fileName || 'profile.jpg', // Default name if fileName is missing
+            type: pickedImage.type || 'image/jpeg', // Default type if missing
+        });
+        
     }
-  };
+};
+
 
   const updateProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            Alert.alert('Error', 'You must be logged in to update your profile.');
+            return;
+        }
 
-      if (!token) {
-        Alert.alert('Error', 'You must be logged in to update your profile.');
-        return;
-      }
+        const formData = new FormData();
+        formData.append('username', UserName);
+        formData.append('email', email);
+        formData.append('D_O_B', birth.toISOString().split('T')[0]);
+        formData.append('contact_no', phoneNumber.trim() || null); // Handle empty phone number
+        formData.append('gender', gender);
+        formData.append('imageBase64', pickedImage.base64);
 
-      const data = {
-        username: UserName,
-        email: email,
-        imagelink: profileImage,
-        D_O_B: birth.toISOString().split('T')[0], // Format the date to YYYY-MM-DD
-        contact_no: phoneNumber,
-        gender: gender,
-      };
-
-      const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/users`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+  
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+        console.log('API URL:', apiUrl);
+        //console.log('Form Data:', formData);
+        formData.forEach((value, key) => {
+        //console.log(`${key}: ${value}`);
       });
+      
+        const response = await axios.post(`${apiUrl}/api/users`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+        });
 
-      if (response.status === 200) {
-        Alert.alert('Success', 'Profile updated successfully.');
-      }
+        if (response.status === 200) {
+            Alert.alert('Success', 'Profile updated successfully.');
+        }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile.');
+        console.error('Error updating profile:', error.response || error.message);
+        Alert.alert('Error', 'Failed to update profile. Please check your network or contact support.');
     }
-  };
+};
+
+  
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -118,15 +139,13 @@ const EditProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Profile Image */}
       <View style={styles.imageContainer}>
-        <Image source={profileImage ? { uri: profileImage } : require('../assets/me.jpg')} style={styles.profileImage} />
+        <Image source={profileImage ? { uri: profileImage } : require('../assets/profile.jpeg')} style={styles.profileImage} />
         <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
           <Icon name="camera-outline" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Rest of the form */}
       <Text style={styles.header}>Edit Profile</Text>
 
       <View style={styles.inputContainer}>
@@ -246,5 +265,6 @@ const pickerSelectStyles = StyleSheet.create({
     color: '#000',
   },
 });
+
 
 export default EditProfileScreen;
