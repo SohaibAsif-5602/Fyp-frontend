@@ -18,12 +18,13 @@ const PondList = () => {
       const fetchPonds = async () => {
         try {
           const token = await AsyncStorage.getItem('token');
+          console.log('Token:', token);
           if (!token) {
             console.log('No token found. Redirecting to login.');
             navigation.navigate('Login');
             return;
           }
-
+          console.log('Fetching ponds...');
           const response = await fetch(process.env.EXPO_PUBLIC_API_URL + '/api/ponds/get-ponds', {
             method: 'GET',
             headers: {
@@ -34,6 +35,7 @@ const PondList = () => {
 
           if (response.ok) {
             const data = await response.json();
+            console.log(data);
             setPonds(data.ponds);
             console.log('Ponds fetched:', data.ponds);
           } else if (response.status === 401) {
@@ -56,7 +58,7 @@ const PondList = () => {
     // Measure the position of the browse icon
     browseIconRefs.current[index]?.measure(
       (x, y, width, height, pageX, pageY) => {
-        setModalPosition({ top:( pageY + height / 2)-50, left: pageX - 120 }); // Adjusted `left` for left alignment
+        setModalPosition({ top:( pageY + height / 2)-50, left: pageX - 120 }); // Adjusted left for left alignment
         setSelectedPond(pond);
         setModalVisible(true);
       }
@@ -65,7 +67,7 @@ const PondList = () => {
 
   const handleAction = (action) => {
     setModalVisible(false);
-    Alert.alert(`Action Selected: ${action}`, `For Pond: ${selectedPond.pond_name}`);
+    Alert.alert(`Action Selected: ${action}, For Pond: ${selectedPond.pond_name}`);
     navigation.navigate('AddPond', { pond: selectedPond.pond_id });
   };
 
@@ -74,7 +76,7 @@ const PondList = () => {
       <ScrollView contentContainerStyle={styles.pondList}>
         {ponds.map((pond, index) => (
           <View key={index} style={styles.pondCard}>
-            <TouchableOpacity style={styles.pondContent} onPress={() => navigation.navigate('Analytics', { pondId: pond.pond_id })}>
+            <TouchableOpacity style={styles.pondContent} onPress={() => navigation.navigate('Analytics', { pondId: pond.pond_id,pondName: pond.pond_name })}>
               <View style={styles.imgcontainer}>
                 <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
               </View>
@@ -82,8 +84,8 @@ const PondList = () => {
                 <Text style={styles.city}>{pond.pond_name}</Text>
                 <Text style={styles.fish}>{pond.pond_loc}</Text>
                 <Text style={styles.fish}>{pond.specie}</Text>
-                <Text style={styles.health}>Health: {pond.pond_score}%</Text>
-                {pond.pond_score < 50 && <Text style={styles.warning}>⚠️ Health Warning</Text>}
+                <Text style={styles.health}>Health: {pond.pond_score?.toFixed(2)}%</Text>
+                {pond.pond_score < 50 && <Text style={styles.warning}>⚠ Health Warning</Text>}
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -250,4 +252,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PondList;
+export default PondList;

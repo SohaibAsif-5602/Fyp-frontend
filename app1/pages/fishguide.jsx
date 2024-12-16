@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, FlatList, Dimensions } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 const { width } = Dimensions.get('window');
 
@@ -8,7 +9,7 @@ const fishData = [
   {
     id: '1',
     name: 'Catla',
-    image: require('../assets/Fish_PICS/Catla.jpg'),
+    image: require('../assets/Fish PICS/Catla.jpg'),
     stats: {
       temperature: '25 - 32°C',
       pH: '6.5 - 8.0',
@@ -19,8 +20,8 @@ const fishData = [
   },
   {
     id: '2',
-    name: 'Catfish',
-    image: require('../assets/Fish_PICS/Catfish.jpg'),
+    name: 'Silver Carp',
+    image: require('../assets/Fish PICS/Catfish.jpg'),
     stats: {
       temperature: '22 - 28°C',
       pH: '6.5 - 8.0',
@@ -29,16 +30,79 @@ const fishData = [
     },
     description: 'Hardy species, tolerates low oxygen, often monocultured or with tilapia.',
   },
-  // Add other fish data...
+  {
+    id: '3',
+    name: 'Pangas',
+    image: require('../assets/Fish PICS/Cod.jpg'),
+    stats: {
+      temperature: '2 - 10°C',
+      pH: '7.0 - 8.5',
+      population: 'Varies',
+      DO: '5 - 7 mg/L',
+    },
+    description: 'Cold-water fish, farmed in sea cages, requires high oxygen levels.',
+  },
+  {
+    id: '4',
+    name: 'Rahu',
+    image: require('../assets/Fish PICS/GrassCarp.jpg'),
+    stats: {
+      temperature: '20 - 30°C',
+      pH: '6.5 - 8.5',
+      population: '50 - 150 individuals',
+      DO: '3 - 5 mg/L',
+    },
+    description: 'Herbivorous, controls aquatic vegetation, polycultured with Catla and Rohu.',
+  },
+  {
+    id: '5',
+    name: 'Koi',
+    image: require('../assets/Fish PICS/Milkfish.jpg'),
+    stats: {
+      temperature: '26 - 30°C',
+      pH: '7.0 - 8.5',
+      population: '50 - 200 individuals',
+      DO: '3 - 6 mg/L',
+    },
+    description: 'Popular in brackish water ponds, feeds on algae and small invertebrates.',
+  },
+  {
+    id: '6',
+    name: 'Tilapia',
+    image: require('../assets/Fish PICS/Salmon.jpg'),
+    stats: {
+      temperature: '8 - 14°C',
+      pH: '6.5 - 8.0',
+      population: 'Varies',
+      DO: '6 - 8 mg/L',
+    },
+    description: 'Cold-water species, farmed in sea pens, requires high-quality, protein-rich feed.',
+  },
+  {
+    id: '7',
+    name: 'Sing',
+    image: require('../assets/Fish PICS/Tilapia.jpg'),
+    stats: {
+      temperature: '24 - 30°C',
+      pH: '6.0 - 9.0',
+      population: '100 - 300 individuals',
+      DO: '3 - 6 mg/L',
+    },
+    description: 'Fast-growing, tolerates various conditions, ideal for polyculture with catfish.',
+  },
+  {
+    id: '8',
+    name: 'Carp',
+    image: require('../assets/Fish PICS/Trout.jpg'),
+    stats: {
+      temperature: '10 - 16°C',
+      pH: '6.5 - 8.0',
+      population: '100 - 200 individuals',
+      DO: '7 - 9 mg/L',
+    },
+    description: 'Cold-water fish, prefers flowing water, grown in raceways or recirculating systems.',
+  },
 ];
-
-const Logo = () => (
-  <Image
-    source={require('../assets/fish_logo.png')}
-    style={styles.logo}
-    resizeMode="contain"
-  />
-);
 
 const FishGuidePage = () => {
   const renderFishItem = ({ item }) => (
@@ -76,11 +140,6 @@ const FishGuidePage = () => {
           </Text>
         </View>
       }
-      ListFooterComponent={
-        <View style={styles.footerContainer}>
-          <Logo />
-        </View>
-      }
     />
   );
 };
@@ -88,64 +147,77 @@ const FishGuidePage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA', // Light grey for a subtle background
   },
   headerContainer: {
     alignItems: 'center',
-    paddingVertical: 30,
-    backgroundColor: '#1A9A9A',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    paddingVertical: 20,
+    backgroundColor: '#00BCD4', // Teal for a fresh look
+    borderBottomLeftRadius: 30, // Smooth rounded edges
+    borderBottomRightRadius: 30,
+    elevation: 5, // Shadow effect for header
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   heading: {
     fontSize: 36,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    letterSpacing: 1.2, // Slight spacing for elegance
   },
   subheading: {
     fontSize: 18,
     color: '#E0F7FA',
     textAlign: 'center',
     marginTop: 10,
-    paddingHorizontal: 30,
+    paddingHorizontal: 40, // Better spacing
+    fontStyle: 'italic', // Subtle emphasis
   },
   listContainer: {
     padding: 20,
   },
   fishItem: {
     flexDirection: 'row',
-    backgroundColor: '#E0F7FA',
-    borderRadius: 15,
-    marginBottom: 20,
+    marginTop: 20,
+    borderRadius: 20, // Smooth rounded corners
+    marginBottom: 10,
     overflow: 'hidden',
-    elevation: 5,
+    backgroundColor: '#FFFFFF', // White for contrast
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   fishImage: {
     width: width * 0.4,
     height: width * 0.4,
-    borderTopLeftRadius: 15,
-    borderBottomLeftRadius: 15,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
   },
   fishInfo: {
     flex: 1,
     padding: 15,
     justifyContent: 'center',
+    backgroundColor: '#FAFAFA', // Slight contrast
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
   },
   fishName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#00796B',
+    color: '#00796B', // Complementary teal
     marginBottom: 10,
+    textTransform: 'uppercase', // Adds emphasis
   },
   statsContainer: {
-    backgroundColor: '#B2EBF2',
+    backgroundColor: '#E0F7FA', // Light teal
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
+    elevation: 2, // Light shadow for depth
   },
   fishStats: {
     fontSize: 16,
@@ -154,17 +226,11 @@ const styles = StyleSheet.create({
   },
   fishDescription: {
     fontSize: 16,
-    color: '#004D40',
+    color: '#616161', // Neutral grey for description
     marginTop: 10,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-  },
-  footerContainer: {
-    alignItems: 'center',
-    paddingVertical: 30,
+    lineHeight: 22, // Improves readability
   },
 });
 
-export default FishGuidePage;
+
+export default FishGuidePage;

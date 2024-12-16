@@ -10,7 +10,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Import the Picker
-import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddPond = ({ navigation }) => {
@@ -18,8 +17,6 @@ const AddPond = ({ navigation }) => {
   const [location, setLocation] = useState('');
   const [fishSpecies, setFishSpecies] = useState('');
   const [fishAge, setFishAge] = useState('');
-
-  const { isDarkMode } = useContext(DarkModeContext); // Consume isDarkMode from context
 
   const handleSubmit = async () => {
     if (pondName && location && fishSpecies && fishAge) {
@@ -75,46 +72,50 @@ const AddPond = ({ navigation }) => {
 
   return (
     
-    <ScrollView contentContainerStyle={[styles.container, isDarkMode && styles.darkContainer]}>
+    <ScrollView contentContainerStyle={[styles.container]}>
      
 
-      <Text style={[styles.label, isDarkMode && styles.darkText]}>Pond Name</Text>
+      <Text style={[styles.label]}>Pond Name</Text>
       <TextInput
-        style={[styles.input, isDarkMode && styles.darkInput]}
+        style={[styles.input]}
         value={pondName}
         onChangeText={setPondName}
         placeholder="Enter Pond Name"
-        placeholderTextColor={isDarkMode ? '#aaa' : '#666'} // Adjust placeholder color
       />
 
-      <Text style={[styles.label, isDarkMode && styles.darkText]}>Location</Text>
+      <Text style={[styles.label]}>Location</Text>
       <TextInput
-        style={[styles.input, isDarkMode && styles.darkInput]}
+        style={[styles.input]}
         value={location}
         onChangeText={setLocation}
         placeholder="Enter Pond Location"
-        placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
       />
 
-      <Text style={[styles.label, isDarkMode && styles.darkText]}>Fish Species</Text>
-      <View style={[styles.pickerContainer, isDarkMode && styles.darkPickerContainer]}>
+      <Text style={[styles.label]}>Fish Species</Text>
+      <View style={[styles.pickerContainer]}>
         <Picker
           selectedValue={fishSpecies}
           onValueChange={(itemValue) => setFishSpecies(itemValue)}
-          style={[styles.picker, isDarkMode && styles.darkPicker]}
-          itemStyle={{ color: isDarkMode ? '#fff' : '#000' }}
+          style={[styles.picker]}
         >
           <Picker.Item label="Select Fish Species" value="" />
-          <Picker.Item label="Catla" value="Catla" />
-          <Picker.Item label="Silver Carp" value="Silver Carp" />
-          <Picker.Item label="Thalia" value="Thalia" />
-          <Picker.Item label="Raho" value="Raho" />
+          <Picker.Item label="Catla" value="katla" />
+          <Picker.Item label="Silver Carp" value="silverCup" />
+          <Picker.Item label="Pangas" value="pangas" />
+          <Picker.Item label="Rahu" value="pui" />
+          <Picker.Item label="Koi" value="koi" />
+          <Picker.Item label="Tilapia" value="tilapia" />
+          <Picker.Item label="Mrigal" value="magur" />
+          <Picker.Item label="Sing" value="sing" />
+          <Picker.Item label="Shrimp" value="shrimp" />
+          <Picker.Item label="Carp" value="karpio" /> 
+          <Picker.Item label= "Prawn" value="prawn" />
         </Picker>
       </View>
 
-      <Text style={[styles.label, isDarkMode && styles.darkText]}>Fish Age (in months)</Text>
+      <Text style={[styles.label]}>Fish Age (in months)</Text>
       <TextInput
-        style={[styles.input, isDarkMode && styles.darkInput]}
+        style={[styles.input]}
         value={fishAge}
         onChangeText={(text) => {
           // Allow only numbers less than or equal to 6
@@ -126,11 +127,10 @@ const AddPond = ({ navigation }) => {
         }}
         placeholder="Enter Fish Age"
         keyboardType="numeric"
-        placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
       />
 
-      <TouchableOpacity style={[styles.addButton, isDarkMode && styles.darkAddButton]} onPress={handleSubmit}>
-        <Text style={[styles.addText, isDarkMode && styles.darkAddText]}>Add Pond</Text>
+      <TouchableOpacity style={[styles.addButton]} onPress={handleSubmit}>
+        <Text style={[styles.addText]}>Add Pond</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -141,9 +141,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 40,
     backgroundColor: '#f9f9f9',
-  },
-  darkContainer: {
-    backgroundColor: '#000',
   },
   headerImage: {
     width: '100%',
@@ -158,9 +155,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#333',
   },
-  darkText: {
-    color: '#fff',
-  },
   input: {
     height: 50,
     borderColor: '#ccc',
@@ -172,11 +166,6 @@ const styles = StyleSheet.create({
     elevation: 2, // Adding shadow for a more professional look
     color: '#000',
   },
-  darkInput: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-    color: '#fff',
-  },
   pickerContainer: {
     height: 50,
     borderColor: '#ccc',
@@ -187,17 +176,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 2, // Adding shadow for a more professional look
   },
-  darkPickerContainer: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-  },
   picker: {
     width: '100%',
     height: '100%',
     color: '#000',
-  },
-  darkPicker: {
-    color: '#fff',
   },
   addButton: {
     backgroundColor: '#0077BE',
@@ -208,17 +190,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  darkAddButton: {
-    backgroundColor: '#1a8bbf',
-  },
   addText: {
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
   },
-  darkAddText: {
-    color: '#fff',
-  },
 });
 
-export default AddPond;
+export default AddPond;

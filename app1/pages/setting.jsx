@@ -1,23 +1,21 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, Switch, StyleSheet, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  Switch,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Modal,
+  Pressable,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { DarkModeContext } from '../contexts/DarkModeContext';
-
-const Logo = () => (
-  <Image
-    source={require('../assets/fish_logo.png')}
-    style={styles.logo}
-    resizeMode="contain"
-  />
-);
 
 const Setting = () => {
   const navigation = useNavigation();
-  const { isDarkMode, setIsDarkMode } = useContext(DarkModeContext);
   const [areAlertsEnabled, setAreAlertsEnabled] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const toggleDarkMode = () => setIsDarkMode((prevState) => !prevState);
   const toggleAutoAction = () => {
     setIsModalVisible(true); // Show modal when the switch is toggled
   };
@@ -27,7 +25,7 @@ const Setting = () => {
   };
 
   const view_fish_guide = () => {
-    navigation.navigate('Fish Guide');
+    navigation.navigate('fishguide');
   };
 
   const handleYes = () => {
@@ -41,58 +39,50 @@ const Setting = () => {
   };
 
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+    <View style={styles.container}>
+      <View style={styles.optionsContainer}>
+        <View style={styles.option}>
+          <Text style={styles.optionText}>Turn off auto-action</Text>
+          <Switch
+            value={areAlertsEnabled}
+            onValueChange={toggleAutoAction}
+            thumbColor={areAlertsEnabled ? '#4caf50' : '#f44336'}
+            trackColor={{ true: '#b2fab4', false: '#f6c5c7' }}
+          />
+        </View>
 
-      <View style={styles.option}>
-        <Text style={[styles.text, isDarkMode && styles.darkText]}>Dark Mode</Text>
-        <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
-      </View>
-
-      <View style={styles.option}>
-        <Text style={[styles.text, isDarkMode && styles.darkText]}>Turn off auto-action</Text>
-        <Switch value={areAlertsEnabled} onValueChange={toggleAutoAction} />
-      </View>
-
-      <View style={styles.option}>
         <TouchableOpacity style={styles.button} onPress={view_fish_guide}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Fish Guide</Text>
+          <Text style={styles.buttonText}>Fish Guide</Text>
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Help Center</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Fishbot')}
+        >
+          <Text style={styles.buttonText}>Help Center</Text>
         </TouchableOpacity>
-      </View>
-
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Learn More about Machiro</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.logoContainer}>
-        <Logo />
       </View>
 
       {/* Modal for confirmation */}
       <Modal
         transparent={true}
         visible={isModalVisible}
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
-            <Text style={[styles.modalText, isDarkMode && styles.darkText]}>
-              Are you sure you want to turn off automatic corrective actions from all your ponds? You can still choose to take action on an alert.
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>
+              Are you sure you want to turn off automatic corrective actions
+              from all your ponds? You can still choose to take action on an
+              alert.
             </Text>
             <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButton} onPress={handleNo}>
-                <Text style={styles.buttonText}>No</Text>
+              <Pressable style={[styles.modalButton, styles.noButton]} onPress={handleNo}>
+                <Text style={styles.modalButtonText}>No</Text>
               </Pressable>
-              <Pressable style={styles.modalButton} onPress={handleYes}>
-                <Text style={styles.buttonText}>Yes</Text>
+              <Pressable style={[styles.modalButton, styles.yesButton]} onPress={handleYes}>
+                <Text style={styles.modalButtonText}>Yes</Text>
               </Pressable>
             </View>
           </View>
@@ -104,91 +94,105 @@ const Setting = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '100%',
     flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
+    backgroundColor: '#f4f6f9',
+    padding: 20,
   },
-  darkContainer: {
-    backgroundColor: '#000',
+  header: {
+    alignItems: 'center',
+    marginBottom: 30,
   },
-  headertext: {
-    paddingVertical: 17,
-    backgroundColor: '#00bcd4',
-    textAlign: 'center',
-    fontSize: 30,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#3c4858',
+    marginTop: 10,
   },
-  darkHeadertext: {
-    backgroundColor: '#000',
-  },
-  text: {
-    paddingTop: 30,
-    fontSize: 20,
-    padding: 10,
-    color: '#000',
-  },
-  darkText: {
-    color: '#fff',
+  optionsContainer: {
+    marginTop: 20,
   },
   option: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 30,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  optionText: {
+    fontSize: 18,
+    color: '#333',
+  },
+  button: {
     marginVertical: 10,
-  },
-  logoContainer: {
+    paddingVertical: 15,
+    backgroundColor: '#0077BE',
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  logo: {
-    width: 200,
-    height: 200,
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: 'white',
+    width: '80%',
     padding: 20,
+    backgroundColor: '#fff',
     borderRadius: 10,
-    width: '90%',
     alignItems: 'center',
-  },
-  darkModalContent: {
-    backgroundColor: '#333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 10,
   },
   modalText: {
-    fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 18,
+    color: '#333',
+    textAlign: 'center',
     marginBottom: 20,
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '30%',
-    marginLeft: 250,
+    width: '100%',
   },
   modalButton: {
     flex: 1,
-    padding: 10,
-    marginHorizontal: 2,
-    backgroundColor: 'red',
-    borderRadius: 5,
+    padding: 15,
     alignItems: 'center',
+    borderRadius: 10,
+    marginHorizontal: 5,
   },
-  button: {
-    // Add any button-specific styles here if needed
-  },
-  buttonText: {
-    color: '#fff',
+  modalButtonText: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  yesButton: {
+    backgroundColor: '#4caf50',
+  },
+  noButton: {
+    backgroundColor: '#f44336',
   },
 });
 
-export default Setting;
+export default Setting;

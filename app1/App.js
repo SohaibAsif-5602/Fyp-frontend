@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DarkModeProvider } from './contexts/DarkModeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Platform, StatusBar, View, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -24,6 +23,8 @@ import CodeVerificationScreen from './pages/VerificationEntry';
 import logo from './assets/machiro.png';
 import Analytics from './pages/analytics';
 import Editprofile from './pages/Editprofile';
+import FishGuideScreen from './pages/fishguide';
+import Fishbot from './pages/fishbot';
 
 const Stack = createStackNavigator();
 
@@ -110,7 +111,6 @@ export default function App() {
           translucent={Platform.OS === 'ios' ? true : false}
         />
         <SafeAreaView style={{ flex: 1, backgroundColor: '#04324d' }}>
-          <DarkModeProvider>
             <NavigationContainer>
               <Stack.Navigator
                 initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}
@@ -139,13 +139,13 @@ export default function App() {
                 <Stack.Screen name="CodeVerification" component={CodeVerificationScreen} />
                 <Stack.Screen name="AddPond" component={AddPond} />
                 <Stack.Screen name="Analytics" component={Analytics} />
+                <Stack.Screen name="Fishbot" component={Fishbot} />
+                <Stack.Screen name="fishguide" component={FishGuideScreen} />
                 <Stack.Screen name="EditProfile" component={Editprofile} />
               </Stack.Navigator>
             </NavigationContainer>
-          </DarkModeProvider>
         </SafeAreaView>
       </View>
     </SafeAreaProvider>
-  );
+  );
 }
-

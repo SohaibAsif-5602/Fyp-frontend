@@ -16,6 +16,7 @@ export default function Analytics() {
   const navigation = useNavigation();
   const route = useRoute(); // Use useRoute to get parameters
   const pondId = route.params?.pondId; // Get the pondId passed from the previous screen
+  const pondName = route.params?.pondName; // Get the pondId passed from the previous screen
 
   const [temperatureData, setTemperatureData] = useState([]);
   const [phData, setPhData] = useState([]);
@@ -28,6 +29,7 @@ export default function Analytics() {
   const [suggestions, setSuggestions] = useState(['Add Ammonia', 'Cool Water Slightly']);
   const [loading, setLoading] = useState(true);
   const [lastDateData, setLastDateData] = useState(null); // Store last date data
+  const [fish, setFish] = useState(null);
   useEffect(() => {
     const fetchPondData = async () => {
       try {
@@ -37,30 +39,38 @@ export default function Analytics() {
           navigation.navigate('Login');
           return;
         }
-
+    
         const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + `/api/ponds/getPondData/${pondId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-
+    
         if (response.status === 200) {
+          console.log('Pond data fetched successfully:', response.data);
           const { temperatureData, phData, turbidityData, dates, pond_score } = response.data;
+    
+          // Update state with full datasets
           setDates([...new Set(dates)]);
           setTemperatureData(temperatureData);
           setPhData(phData);
           setTurbidityData(turbidityData);
           setFishHealth(pond_score);
-
-          // Find the latest date and corresponding data
-          const lastDate = dates[dates.length - 1];
-          const lastPh = phData.find(data => data.date === lastDate)?.value?.toFixed(2) || 'N/A';
-          const lastTemp = temperatureData.find(data => data.date === lastDate)?.value?.toFixed(2) || 'N/A';
-          const lastTurbidity = turbidityData.find(data => data.date === lastDate)?.value?.toFixed(2) || 'N/A';
-
-
-          setLastDateData({ date: lastDate, ph: lastPh, temperature: lastTemp, turbidity: lastTurbidity });
+    
+          // Get the latest (last) data point
+          const lastTemperature = temperatureData[temperatureData.length - 1]?.value?.toFixed(2) || 'N/A';
+          const lastPh = phData[phData.length - 1]?.value?.toFixed(2) || 'N/A';
+          const lastTurbidity = turbidityData[turbidityData.length - 1]?.value?.toFixed(2) || 'N/A';
+          const lastDate = dates[dates.length - 1] || 'N/A';
+    
+          // Update state with the last data point
+          setLastDateData({
+            date: lastDate,
+            ph: lastPh,
+            temperature: lastTemperature,
+            turbidity: lastTurbidity,
+          });
           setLoading(false);
         } else {
           console.error('Failed to fetch pond data. Status:', response.status);
@@ -71,11 +81,130 @@ export default function Analytics() {
         setLoading(false);
       }
     };
+    
+    let intervalId;
 
     if (pondId) {
       fetchPondData();
+      intervalId = setInterval(fetchPondData, 20000);
     }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [pondId]);
+    
+  const fetchFish = async (pondName) => {
+    try {
+      const baseUrl = 'http://192.168.18.86:8000/get-fish'; // Base API URL
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      // Add pond_name as a query parameter
+      const url = `${baseUrl}?pond_name=${encodeURIComponent(pondName)}`;
+  
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Fetched fish successfully:', response.data);
+  
+        // Select the first fish (or implement selection logic if needed)
+        const fishList = response.data.fish;
+        if (fishList && fishList.length > 0) {
+          setFish(fishList[0].specie); // Automatically use the first fish specie
+        } else {
+          console.error('No fish found for the specified pond.');
+        }
+      } else {
+        console.error('Failed to fetch fish. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching fish:', error.message);
+    }
+  };
+  
+  
+  // Call fetchFish when the component mounts
+  useEffect(() => {
+    fetchFish(pondName);
+  }, []);
+  
+  const fetchPrediction = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      const { temperature, ph, turbidity } = lastDateData;
+  
+      // Validate data
+      if (!temperature || isNaN(temperature)) {
+        console.log('Temperature data is missing.');
+        return alert('Temperature data is missing for prediction.');
+      }
+      if (!ph || isNaN(ph)) {
+        console.log('pH data is missing.');
+        return alert('pH data is missing for prediction.');
+      }
+      if (!turbidity || isNaN(turbidity)) {
+        console.log('Turbidity data is missing.');
+        return alert('Turbidity data is missing for prediction.');
+      }
+  
+      // Validate fish
+      if (!fish) {
+        console.log('Fish data is missing.');
+        return alert('Fish species is missing for prediction.');
+      }
+  
+      const payload = {
+        Temperature: parseFloat(temperature),
+        Turbidity: parseFloat(turbidity),
+        PH: parseFloat(ph),
+        Fish: fish, // Use the fetched fish value
+      };
+  
+      const url = 'http://192.168.18.86:8000/predict'; // Hardcoded URL
+      console.log('Request URL:', url);
+      console.log('Request Payload:', payload);
+  
+      const response = await axios.post(url, payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Prediction fetched successfully:', response.data);
+        const formattedPrediction = parseFloat(response.data.prediction).toFixed(2);
+        setFishHealth(formattedPrediction); 
+      } else {
+        console.error('Failed to fetch prediction. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching prediction:', error.message);
+    }
+  };  
+  // Call fetchPrediction whenever lastDateData changes
+  useEffect(() => {
+    if (lastDateData) {
+      fetchPrediction();
+    }
+  }, [lastDateData]);
+  
+  
 
   const deletePond = async () => {
     console.log('Deleting pond:', pondId);
@@ -227,9 +356,9 @@ export default function Analytics() {
         {selectedChart === 'Turbidity' && renderChart(filteredData, 'TURBIDITY CHART')}
 
         <Text style={styles.fishHealth}>
-          Fish Health - <Text style={styles.fishHealthValue}>{fishHealth}%</Text> Okay
-        </Text>
-
+            Fish Health - <Text style={styles.fishHealthValue}>{fishHealth}%</Text> Okay
+          </Text>
+          
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlertHistory')}>
             <Text style={styles.buttonText}>View Alerts History</Text>
@@ -242,8 +371,6 @@ export default function Analytics() {
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -398,6 +525,6 @@ const pickerSelectStyles = StyleSheet.create({
     backgroundColor: '#e0f7fa',
         color: '#007bff',
 
-    marginHorizontal: 5,
-  },
+    marginHorizontal: 5,
+  },
 });

@@ -46,7 +46,13 @@ const ProfileScreen = () => {
   const logout = async () => {
     console.log('Logging out...');
     await AsyncStorage.removeItem('token');
-    navigation.navigate('Login');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }], // Replace 'Login' with the name of your login screen
+    });
+  };
+  const EditNav = () => { 
+    navigation.navigate('EditProfile');
   };
   
   return (
@@ -62,7 +68,7 @@ const ProfileScreen = () => {
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
         <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
-        <TouchableOpacity style={styles.editProfileButton} onPress={() => { navigation.navigate('EditProfile'); }}>
+        <TouchableOpacity style={styles.editProfileButton} onPress={EditNav}>
           <Text style={styles.editProfileText}>Edit Profile</Text>
         </TouchableOpacity>
       </View>
