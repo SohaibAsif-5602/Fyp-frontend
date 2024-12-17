@@ -74,28 +74,42 @@ const PondList = () => {
   return (
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.pondList}>
-        {ponds.map((pond, index) => (
-          <View key={index} style={styles.pondCard}>
-            <TouchableOpacity style={styles.pondContent} onPress={() => navigation.navigate('Analytics', { pondId: pond.pond_id,pondName: pond.pond_name })}>
-              <View style={styles.imgcontainer}>
-                <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
-              </View>
-              <View style={styles.pondDetails}>
-                <Text style={styles.city}>{pond.pond_name}</Text>
-                <Text style={styles.fish}>{pond.pond_loc}</Text>
-                <Text style={styles.fish}>{pond.specie}</Text>
-                <Text style={styles.health}>Health: {pond.pond_score?.toFixed(2)}%</Text>
-                {pond.pond_score < 50 && <Text style={styles.warning}>⚠ Health Warning</Text>}
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              ref={(el) => (browseIconRefs.current[index] = el)} // Store the ref for each browse icon
-              onPress={() => handleBrowseClick(pond, index)}
-            >
-              <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
-            </TouchableOpacity>
+      {ponds.map((pond, index) => (
+  <View key={index} style={styles.pondCard}>
+    {pond.status === 'approved' ? (
+      <>
+        <TouchableOpacity
+          style={styles.pondContent}
+          onPress={() => navigation.navigate('Analytics', { pondId: pond.pond_id, pondName: pond.pond_name })}
+        >
+          <View style={styles.imgcontainer}>
+            <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
           </View>
-        ))}
+          <View style={styles.pondDetails}>
+            <Text style={styles.city}>{pond.pond_name}</Text>
+            <Text style={styles.fish}>{pond.pond_loc}</Text>
+            <Text style={styles.fish}>{pond.specie}</Text>
+            <Text style={styles.health}>Health: {pond.pond_score?.toFixed(2)}%</Text>
+            {pond.pond_score < 50 && <Text style={styles.warning}>⚠ Health Warning</Text>}
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          ref={(el) => (browseIconRefs.current[index] = el)} // Store the ref for each browse icon
+          onPress={() => handleBrowseClick(pond, index)}
+        >
+          <FontAwesome5 name="ellipsis-v" size={24} color="black" style={styles.browseIcon} />
+        </TouchableOpacity>
+      </>
+    ) : (
+      <View style={styles.unapprovedPondContent}>
+        <Text style={styles.unapprovedName}>{pond.pond_name}</Text>
+        <Text style={styles.unapprovedText}>Waiting for approval</Text>
+      </View>
+    )}
+  </View>
+))}
+
+
       </ScrollView>
 
       <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddPond')}>
@@ -175,6 +189,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 15,
   },
+  unapprovedName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#34495e',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  
   pondImage: {
     width: 100,
     height: 100,
@@ -203,6 +225,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e74c3c',
   },
+  unapprovedPondContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+  },
+  unapprovedText: {
+    fontSize: 16,
+    color: '#e67e22',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  
   addButton: {
     backgroundColor: '#0077BE',
     paddingVertical: 15,
@@ -252,4 +289,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PondList;
+export default PondList;

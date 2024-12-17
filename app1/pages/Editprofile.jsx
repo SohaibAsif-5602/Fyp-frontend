@@ -6,7 +6,6 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { useNavigation } from '@react-navigation/native';
 
 const EditProfileScreen = () => {
   const [UserName, setUserName] = useState('');
@@ -15,47 +14,48 @@ const EditProfileScreen = () => {
   const [birth, setBirth] = useState(new Date());
   const [gender, setGender] = useState('');
   const [profileImage, setProfileImage] = useState(null);
-  const [imageFile, setImageFile] = useState(null); // To store the image file
+  const [imageFile, setImageFile] = useState(null);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-const [pickedImage, setPickedImage] = useState(null);
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          Alert.alert('Error', 'You must be logged in to view your profile.');
-          return;
-        }
+  const [pickedImage, setPickedImage] = useState(null);
 
-        const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/users`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 200) {
-          const userData = response.data;
-          setUserName(userData.username);
-          setEmail(userData.email);
-          setPhoneNumber(userData.contact_no ? userData.contact_no.toString() : '');
-          setBirth(userData.D_O_B ? new Date(userData.D_O_B) : new Date());
-          setGender(userData.gender);
-          setProfileImage(userData.imagelink || '../assets/me.jpg');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Failed to fetch user data.');
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Error', 'You must be logged in to view your profile.');
+        return;
       }
-    };
 
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        const userData = response.data;
+        setUserName(userData.username);
+        setEmail(userData.email);
+        setPhoneNumber(userData.contact_no ? userData.contact_no.toString() : '');
+        setBirth(userData.D_O_B ? new Date(userData.D_O_B) : new Date());
+        setGender(userData.gender);
+        setProfileImage(userData.imagelink || '../assets/me.jpg');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to fetch user data.');
+    }
+  };
+
+  useEffect(() => {
     fetchUserData();
   }, []);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Permission to access media library is required!');
-        return;
+      Alert.alert('Permission Denied', 'Permission to access media library is required!');
+      return;
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -65,65 +65,54 @@ const [pickedImage, setPickedImage] = useState(null);
       quality: 1,
       base64: true,
     });
-  
 
     if (!result.canceled) {
       const fixImage = result.assets[0];
-        setPickedImage(fixImage)  // Ensure this is correct
-        console.log('Picked Image:', pickedImage);
-        setProfileImage(fixImage.uri);
-        setImageFile({
-          base64: pickedImage.base64,
-            uri: pickedImage.uri,
-            name: pickedImage.fileName || 'profile.jpg', // Default name if fileName is missing
-            type: pickedImage.type || 'image/jpeg', // Default type if missing
-        });
-        
+      setPickedImage(fixImage);
+      setProfileImage(fixImage.uri);
+      setImageFile({
+        base64: fixImage.base64,
+        uri: fixImage.uri,
+        name: fixImage.fileName || 'profile.jpg',
+        type: fixImage.type || 'image/jpeg',
+      });
     }
-};
-
+  };
 
   const updateProfile = async () => {
     try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-            Alert.alert('Error', 'You must be logged in to update your profile.');
-            return;
-        }
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Error', 'You must be logged in to update your profile.');
+        return;
+      }
 
-        const formData = new FormData();
-        formData.append('username', UserName);
-        formData.append('email', email);
-        formData.append('D_O_B', birth.toISOString().split('T')[0]);
-        formData.append('contact_no', phoneNumber.trim() || null); // Handle empty phone number
-        formData.append('gender', gender);
-        formData.append('imageBase64', pickedImage.base64);
+      const formData = new FormData();
+      formData.append('username', UserName);
+      formData.append('email', email);
+      formData.append('D_O_B', birth.toISOString().split('T')[0]);
+      formData.append('contact_no', phoneNumber.trim() || null);
+      formData.append('gender', gender);
+      formData.append('imageBase64', pickedImage.base64);
 
-  
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-        console.log('API URL:', apiUrl);
-        //console.log('Form Data:', formData);
-        formData.forEach((value, key) => {
-        //console.log(`${key}: ${value}`);
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+      const response = await axios.post(`${apiUrl}/api/users`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      
-        const response = await axios.post(`${apiUrl}/api/users`, formData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-        });
 
-        if (response.status === 200) {
-            Alert.alert('Success', 'Profile updated successfully.');
-        }
+      if (response.status === 200) {
+        Alert.alert('Success', 'Profile updated successfully.');
+        fetchUserData(); // Re-fetch data after successful update
+      }
     } catch (error) {
-        console.error('Error updating profile:', error.response || error.message);
-        Alert.alert('Error', 'Failed to update profile. Please check your network or contact support.');
+      console.error('Error updating profile:', error.response || error.message);
+      Alert.alert('Error', 'Failed to update profile. Please check your network or contact support.');
     }
-};
-
-  
+  };
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -179,6 +168,7 @@ const [pickedImage, setPickedImage] = useState(null);
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

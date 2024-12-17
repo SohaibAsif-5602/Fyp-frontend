@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import ProfileImage from '../assets/profile.jpeg';
 import axios from 'axios'; // Import axios for API calls
 
@@ -17,31 +17,33 @@ const ProfileScreen = () => {
     gender: '',
   });
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          navigation.navigate('Login');
-          return;
-        }
-
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+'/api/users', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        setUserData(response.data);
-        console.log(response.data) // Assuming the API returns user data directly
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Failed to fetch user data');
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
       }
-    };
 
-    fetchUserData();
-  }, [navigation]);
+      const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/users', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUserData(response.data);
+      console.log(response.data); // Log for debugging
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to fetch user data');
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
   const logout = async () => {
     console.log('Logging out...');
@@ -51,19 +53,21 @@ const ProfileScreen = () => {
       routes: [{ name: 'Login' }], // Replace 'Login' with the name of your login screen
     });
   };
-  const EditNav = () => { 
+
+  const EditNav = () => {
     navigation.navigate('EditProfile');
   };
-  
+
   return (
     <ScrollView style={styles.container}>
       {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
-           source={userData.imagelink && userData.imagelink.startsWith('http') 
-            ? { uri: userData.imagelink } 
-            : require('../assets/profile.jpeg')
-          } 
+          source={
+            userData.imagelink && userData.imagelink.startsWith('http')
+              ? { uri: userData.imagelink }
+              : require('../assets/profile.jpeg')
+          }
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>

@@ -8,7 +8,7 @@ export const getPondData = (req, res) => {
     const pondId = req.params.pondId;
 
     const query = `
-        SELECT p.channel_id, p.pond_score, i.channel_read 
+        SELECT p.channel_id, p.status, i.channel_read 
         FROM Pond p 
         JOIN Iot i ON p.channel_id = i.channel_id 
         WHERE p.pond_id = ? AND p.user_id = ?
@@ -24,8 +24,17 @@ export const getPondData = (req, res) => {
             return res.status(404).json({ msg: 'Pond not found or access denied' });
         }
 
-        const { channel_id, pond_score, channel_read } = results[0];
-        console.log(channel_id,channel_read);
+        const { channel_id, channel_read, status } = results[0];
+
+        // Check pond status
+        if (status === 'waiting_for_approval') {
+            return res.status(403).json({ msg: 'Pond is waiting for approval' });
+        }
+
+        if (status !== 'approved') {
+            return res.status(400).json({ msg: 'Invalid pond status' });
+        }
+
         const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
 
         axios.get(url)
@@ -49,10 +58,10 @@ export const getPondData = (req, res) => {
                 }));
 
                 res.status(200).json({
-                    pond_score: pond_score,
-                    temperatureData: temperatureData,
-                    phData: phData,
-                    turbidityData: turbidityData,
+                    status, // Include status in the response
+                    temperatureData,
+                    phData,
+                    turbidityData,
                     dates: [...new Set(formattedDates)],
                 });
             })
@@ -112,8 +121,8 @@ export const addPond = async (req, res) => {
         // Function to insert fish data
         function insertFishData() {
             db.query(
-                'INSERT INTO Fishgroup (age, specie, imagelink) VALUES (?, ?, ?)',
-                [fishAge, fishSpecies, 'default_image_link'], // Replace with actual image link if available
+                'INSERT INTO Fishgroup (age, specie, imagelink,pond_name) VALUES (?, ?, ?,?)',
+                [fishAge, fishSpecies, 'default_image_link',channelName], // Replace with actual image link if available
                 (error, fishResult) => {
                     if (error) {
                         console.error('Error inserting fish data into the database:', error);
@@ -129,7 +138,7 @@ export const addPond = async (req, res) => {
         // Function to insert pond data
         function insertPondData() {
             db.query(
-                'INSERT INTO Pond (channel_id, pond_name, pond_loc, fish_id, user_id, pond_score) VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO Pond (channel_id, pond_name, pond_loc, fish_id, user_id) VALUES (?, ?, ?, ?, ?)',
                 [channelId, channelName, location, fishId, userId, 0], // Assuming pond_score is initialized to 0
                 (error) => {
                     if (error) {
@@ -180,7 +189,7 @@ export const getPonds = (req, res) => {
             p.pond_loc,
             f.specie,
             f.imagelink,
-            p.pond_score
+            p.status
         FROM Pond p
         JOIN Fishgroup f ON p.fish_id = f.id
         WHERE p.user_id = ?`;

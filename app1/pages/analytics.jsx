@@ -134,7 +134,7 @@ export default function Analytics() {
   
   // Call fetchFish when the component mounts
   useEffect(() => {
-    fetchFish(pondName);
+    // fetchFish(pondName);
   }, []);
   
   const fetchPrediction = async () => {
@@ -199,9 +199,9 @@ export default function Analytics() {
   };  
   // Call fetchPrediction whenever lastDateData changes
   useEffect(() => {
-    if (lastDateData) {
-      fetchPrediction();
-    }
+    // if (lastDateData) {
+    //   fetchPrediction();
+    // }
   }, [lastDateData]);
   
   
