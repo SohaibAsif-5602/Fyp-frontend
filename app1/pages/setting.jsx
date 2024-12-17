@@ -1,198 +1,173 @@
-import React, { useContext, useState } from 'react';
-import {
-  View,
-  Text,
-  Switch,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Modal,
-  Pressable,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import ProfileImage from '../assets/profile.jpeg';
+import axios from 'axios'; // Import axios for API calls
 
 const Setting = () => {
   const navigation = useNavigation();
-  const [areAlertsEnabled, setAreAlertsEnabled] = useState(true);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [userData, setUserData] = useState({
+    username: '',
+    email: '',
+    imagelink: '',
+    D_O_B: '',
+    contact_on: '',
+    gender: '',
+  });
 
-  const toggleAutoAction = () => {
-    setIsModalVisible(true); // Show modal when the switch is toggled
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
+      }
+
+      const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/users', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUserData(response.data);
+      console.log(response.data); // Log for debugging
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to fetch user data');
+    }
   };
 
-  const viewAlertSettingsPage = () => {
-    navigation.navigate('AlertSettingsPage');
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+  const logout = async () => {
+    console.log('Logging out...');
+    await AsyncStorage.removeItem('token');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }], // Replace 'Login' with the name of your login screen
+    });
   };
 
-  const view_fish_guide = () => {
-    navigation.navigate('fishguide');
-  };
-
-  const handleYes = () => {
-    setIsModalVisible(false);
-    setAreAlertsEnabled(false); // Disable auto-action
-  };
-
-  const handleNo = () => {
-    setIsModalVisible(false);
-    setAreAlertsEnabled(true); // Keep auto-action enabled
+  const EditNav = () => {
+    navigation.navigate('EditProfile');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.optionsContainer}>
-        <View style={styles.option}>
-          <Text style={styles.optionText}>Turn off auto-action</Text>
-          <Switch
-            value={areAlertsEnabled}
-            onValueChange={toggleAutoAction}
-            thumbColor={areAlertsEnabled ? '#4caf50' : '#f44336'}
-            trackColor={{ true: '#b2fab4', false: '#f6c5c7' }}
-          />
-        </View>
+    <ScrollView style={styles.container}>
+      {/* Profile Info */}
+      <View style={styles.profileContainer}>
+        <Image
+          source={
+            userData.imagelink && userData.imagelink.startsWith('http')
+              ? { uri: userData.imagelink }
+              : require('../assets/profile.jpeg')
+          }
+          style={styles.profileImage}
+        />
+        <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
+        <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
+        
+      </View>
 
-        <TouchableOpacity style={styles.button} onPress={view_fish_guide}>
-          <Text style={styles.buttonText}>Fish Guide</Text>
+      {/* Profile Options */}
+      <View style={styles.optionContainer}>
+        <View style={styles.divider} />
+
+        <TouchableOpacity style={styles.option} onPress={() => {EditNav();}}>
+          <Icon name="trash-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>View Profile</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('Fishbot')}
-        >
-          <Text style={styles.buttonText}>Help Center</Text>
+        <TouchableOpacity style={styles.option} onPress={() => {    navigation.navigate('fishguide');
+}}>
+          <Icon name="time-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Fish Guide</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.option} onPress={() => {navigation.navigate('Fishbot')}}>
+          <Icon name="time-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Help Center</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.option} onPress={logout}>
+          <Icon name="log-out-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Log Out</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
-      {/* Modal for confirmation */}
-      <Modal
-        transparent={true}
-        visible={isModalVisible}
-        animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>
-              Are you sure you want to turn off automatic corrective actions
-              from all your ponds? You can still choose to take action on an
-              alert.
-            </Text>
-            <View style={styles.modalButtons}>
-              <Pressable style={[styles.modalButton, styles.noButton]} onPress={handleNo}>
-                <Text style={styles.modalButtonText}>No</Text>
-              </Pressable>
-              <Pressable style={[styles.modalButton, styles.yesButton]} onPress={handleYes}>
-                <Text style={styles.modalButtonText}>Yes</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+      {/* App Version */}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f6f9',
-    padding: 20,
+    backgroundColor: '#fff',
+    padding: 16,
   },
-  header: {
+  profileContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 28,
+  profileImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    marginBottom: 10,
+  },
+  profileName: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#3c4858',
-    marginTop: 10,
   },
-  optionsContainer: {
-    marginTop: 20,
+  profileEmail: {
+    color: '#555',
+    marginBottom: 10,
+  },
+  editProfileButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  editProfileText: {
+    color: '#fff',
+  },
+  optionContainer: {
+    marginBottom: 20,
   },
   option: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-    padding: 15,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   optionText: {
-    fontSize: 18,
-    color: '#333',
-  },
-  button: {
-    marginVertical: 10,
-    paddingVertical: 15,
-    backgroundColor: '#0077BE',
-    borderRadius: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  buttonText: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 10,
-  },
-  modalText: {
-    fontSize: 18,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButton: {
-    flex: 1,
-    padding: 15,
-    alignItems: 'center',
-    borderRadius: 10,
-    marginHorizontal: 5,
-  },
-  modalButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+    marginLeft: 10,
+    flex: 1,
   },
-  yesButton: {
-    backgroundColor: '#4caf50',
+  divider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
   },
-  noButton: {
-    backgroundColor: '#f44336',
+  appVersion: {
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
   },
 });
 
-export default Setting;
+export default Setting;

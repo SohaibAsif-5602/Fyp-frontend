@@ -27,6 +27,7 @@ import FishGuideScreen from './pages/fishguide';
 import Fishbot from './pages/fishbot';
 import Transaction from './pages/transaction';
 import addTransaction  from './pages/addtransaction';
+import EditPond from './pages/Editpond';
 
 
 const Stack = createStackNavigator();
@@ -147,6 +148,8 @@ export default function App() {
                 <Stack.Screen name="EditProfile" component={Editprofile} />
                 <Stack.Screen name="Transaction" component={Transaction} />
                 <Stack.Screen name="AddTransaction" component={addTransaction} />
+                <Stack.Screen name="EditPond" component={EditPond} />
+
               </Stack.Navigator>
             </NavigationContainer>
         </SafeAreaView>

@@ -6,7 +6,7 @@ import Ponds from './ponds';
 import ProfileScreen from './profile';
 import Setting from './setting';
 import NotificationScreen from './notifications';
-
+import Dashboard from './dashboard';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,8 +20,10 @@ function MainTabs() {
 
           if (route.name === 'Ponds') {
             iconName = focused ? 'water' : 'water-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+          // } else if (route.name === 'Profile') {
+          //   iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Dashboard') {
+            iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
           } else if (route.name === 'Notifications') {
@@ -34,7 +36,7 @@ function MainTabs() {
         tabBarInactiveTintColor: '#E0E0E0',
         tabBarStyle: {
           backgroundColor: '#04324d',
-          paddingBottom: 10,
+          paddingBottom: 15,
           height: 60,
           
         },
@@ -42,8 +44,10 @@ function MainTabs() {
         headerShown: false,
       })}
     >
+      <Tab.Screen name="Dashboard" component={Dashboard} />
+      {/* <Tab.Screen name="Profile" component={ProfileScreen} /> */}
       <Tab.Screen name="Ponds" component={Ponds} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+
       <Tab.Screen name="Notifications" component={NotificationScreen} />
       <Tab.Screen name="Settings" component={Setting} />
       

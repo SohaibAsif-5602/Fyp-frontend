@@ -125,14 +125,14 @@ const PondList = () => {
             onPress={() => setModalVisible(false)}
           >
             <View style={[styles.modalContent, { top: modalPosition.top, left: modalPosition.left }]}>
-              <TouchableOpacity style={styles.modalOption} onPress={() => { setModalVisible(false); navigation.navigate('Analytics', { pond: selectedPond.pond_id });    ;
+              <TouchableOpacity style={styles.modalOption} onPress={() => { setModalVisible(false); navigation.navigate('EditPond', { pondId: selectedPond.pond_id });    ;
 }}>
                 <Text style={styles.modalOptionText}>Edit Record</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Analytics', { pond: selectedPond.pond_id })}}>
                 <Text style={styles.modalOptionText}>View Details</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Analytics', { pond: selectedPond.pond_id })}}>
+              <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Transaction')}}>
                 <Text style={styles.modalOptionText}>Delete </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalOption} onPress={() =>{setModalVisible(false); navigation.navigate('AlertSettingsPage', { pondId: selectedPond.pond_id,pondName:selectedPond.pond_name })}}>
