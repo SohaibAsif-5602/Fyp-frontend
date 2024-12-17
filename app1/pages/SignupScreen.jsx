@@ -122,7 +122,10 @@ const SignupScreen = () => {
             <Text style={styles.buttonText}>Create</Text>
           </TouchableOpacity>
         </View>
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <View style={styles.txtdontcontainer1}>
             <Text style={[styles.txtDont1, isDarkMode ? styles.darkText : styles.lightText]}>Already have an account? </Text>

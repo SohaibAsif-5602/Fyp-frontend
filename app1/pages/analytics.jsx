@@ -67,6 +67,122 @@ export default function Analytics() {
       fetchPondData(); // Only fetch data if pondId is available
     }
   }, [pondId]);
+<<<<<<< Updated upstream
+=======
+    
+  const fetchFish = async (pondName) => {
+    try {
+      const baseUrl = 'http://192.168.18.86:8000/get-fish'; // Base API URL
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      // Add pond_name as a query parameter
+      const url = `${baseUrl}?pond_name=${encodeURIComponent(pondName)}`;
+  
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Fetched fish successfully:', response.data);
+  
+        // Select the first fish (or implement selection logic if needed)
+        const fishList = response.data.fish;
+        if (fishList && fishList.length > 0) {
+          setFish(fishList[0].specie); // Automatically use the first fish specie
+        } else {
+          console.error('No fish found for the specified pond.');
+        }
+      } else {
+        console.error('Failed to fetch fish. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching fish:', error.message);
+    }
+  };
+  
+  
+  // Call fetchFish when the component mounts
+  useEffect(() => {
+     fetchFish(pondName);
+  }, []);
+  
+  const fetchPrediction = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      const { temperature, ph, turbidity } = lastDateData;
+  
+      // Validate data
+      if (!temperature || isNaN(temperature)) {
+        console.log('Temperature data is missing.');
+        return alert('Temperature data is missing for prediction.');
+      }
+      if (!ph || isNaN(ph)) {
+        console.log('pH data is missing.');
+        return alert('pH data is missing for prediction.');
+      }
+      if (!turbidity || isNaN(turbidity)) {
+        console.log('Turbidity data is missing.');
+        return alert('Turbidity data is missing for prediction.');
+      }
+  
+      // Validate fish
+      if (!fish) {
+        console.log('Fish data is missing.');
+        return alert('Fish species is missing for prediction.');
+      }
+  
+      const payload = {
+        Temperature: parseFloat(temperature),
+        Turbidity: parseFloat(turbidity),
+        PH: parseFloat(ph),
+        Fish: fish, // Use the fetched fish value
+      };
+  
+      const url = 'http://192.168.18.86:8000/predict'; // Hardcoded URL
+      console.log('Request URL:', url);
+      console.log('Request Payload:', payload);
+  
+      const response = await axios.post(url, payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Prediction fetched successfully:', response.data);
+        const formattedPrediction = parseFloat(response.data.prediction).toFixed(2);
+        setFishHealth(formattedPrediction); 
+      } else {
+        console.error('Failed to fetch prediction. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching prediction:', error.message);
+    }
+  };  
+  // Call fetchPrediction whenever lastDateData changes
+  useEffect(() => {
+    if (lastDateData) {
+     fetchPrediction();
+    }
+  }, [lastDateData]);
+  
+  
+>>>>>>> Stashed changes
 
   const deletePond = async () => {
     console.log('Deleting pond:', pondId);
@@ -250,6 +366,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007bff',
   },
+  
   chart: {
     marginTop: 20,
     borderRadius: 16,
@@ -332,6 +449,11 @@ const pickerSelectStyles = StyleSheet.create({
     color: 'black',
     paddingRight: 30,
     backgroundColor: '#e0f7fa',
+<<<<<<< Updated upstream
+=======
+        color: '#007bff',
+
+>>>>>>> Stashed changes
     marginHorizontal: 5,
   },
 });
