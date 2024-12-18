@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import ProfileImage from '../assets/profile.jpeg';
 import axios from 'axios'; // Import axios for API calls
 
@@ -17,69 +17,83 @@ const ProfileScreen = () => {
     gender: '',
   });
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          navigation.navigate('Login');
-          return;
-        }
-
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL+'/api/users', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        setUserData(response.data);
-        console.log(response.data) // Assuming the API returns user data directly
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Failed to fetch user data');
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
       }
-    };
 
-    fetchUserData();
-  }, []);
+      const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/users', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUserData(response.data);
+      console.log(response.data); // Log for debugging
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to fetch user data');
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
   const logout = async () => {
     console.log('Logging out...');
     await AsyncStorage.removeItem('token');
-    navigation.navigate('Login');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }], // Replace 'Login' with the name of your login screen
+    });
   };
-  
+
+  const EditNav = () => {
+    navigation.navigate('EditProfile');
+  };
+
   return (
     <ScrollView style={styles.container}>
       {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
-           source={userData.imagelink && userData.imagelink.startsWith('http') 
-            ? { uri: userData.imagelink } 
-            : require('../assets/profile.jpeg')
-          } 
+          source={
+            userData.imagelink && userData.imagelink.startsWith('http')
+              ? { uri: userData.imagelink }
+              : require('../assets/profile.jpeg')
+          }
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
         <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
-        <TouchableOpacity style={styles.editProfileButton} onPress={() => { navigation.navigate('EditProfile'); }}>
-          <Text style={styles.editProfileText}>Edit Profile</Text>
-        </TouchableOpacity>
+        
       </View>
 
       {/* Profile Options */}
       <View style={styles.optionContainer}>
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.option} onPress={() => {}}>
+        <TouchableOpacity style={styles.option} onPress={() => {EditNav();}}>
           <Icon name="trash-outline" size={24} color="#000" />
-          <Text style={styles.optionText}>Clear Cache</Text>
+          <Text style={styles.optionText}>View Profile</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option} onPress={() => {}}>
+        <TouchableOpacity style={styles.option} onPress={() => {    navigation.navigate('fishguide');
+}}>
           <Icon name="time-outline" size={24} color="#000" />
-          <Text style={styles.optionText}>Clear History</Text>
+          <Text style={styles.optionText}>Fish Guide</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.option} onPress={() => {navigation.navigate('Fishbot')}}>
+          <Icon name="time-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Help Center</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
 

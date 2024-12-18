@@ -175,18 +175,25 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.imgcontainer}>
-      <View style={styles.container}>
-        <View style={styles.imgcontainer}>
-          <Image source={require('../assets/topVector.jpg')} style={styles.topImage} />
-        </View>
-        <View style={styles.txthellocontainer}>
-          <Text style={styles.txthello}>Hello</Text>
-        </View>
-        <View style={styles.txtsignincontainer}>
-          <Text style={styles.txtsignin}>Sign in to your account</Text>
-        </View>
+      {/* Top Half (Blue) */}
+      <View style={styles.topHalf}>
+        <Image
+          source={require('../assets/machiro.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
+      {/* Bottom Half (White) */}
+      <View style={styles.bottomHalf}>
+        <Text style={styles.txtsignin}>Sign in to your account</Text>
         <View style={styles.usercontainer}>
-          <MaterialCommunityIcons name="email" size={24} color="#9A9A9A" style={styles.usericon} />
+          <MaterialCommunityIcons
+            name="email"
+            size={24}
+            color="#9A9A9A"
+            style={styles.usericon}
+          />
           <TextInput
             style={styles.usertextfield}
             placeholder="Email"
@@ -208,7 +215,7 @@ const LoginScreen = () => {
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
           <View style={styles.txtdontcontainer}>
-            <Text style={styles.txtDont}>Forgot Password </Text>
+            <Text style={styles.txtDont}>Forgot Password? </Text>
             <Text style={styles.txtcreate}>Click here</Text>
           </View>
         </TouchableOpacity>
@@ -251,45 +258,59 @@ export default LoginScreen;
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 100,
-  },
-  imgcontainer: {
     flex: 1,
+    paddingTop: 150,
+    backgroundColor: '#F8F9FA',
   },
-  topImage: {
-    height: 120,
-    width: 360,
+  topHalf: {
+    flex: 1,
+    backgroundColor: '#04324d',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bottomHalf: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 400,
+  },
+  logo: {
+    width: 280,              // Slightly wider for a balanced look
+    height: 60,
+    padding: 35,
+    marginBottom: 15,              // Maintain a slim height
+    alignSelf: 'center',     // Center horizontally
+    borderRadius: 25,        // More rounded corners for a smooth look
+  },  
+  imgcontainer: {
     flex: 1,
   },
   txthellocontainer: {
     width: '100%',
   },
-  txthello: {
-    textAlign: 'center',
-    fontSize: 65,
-    color: 'purple',
-    fontWeight: '500',
-  },
   txtsignincontainer: {
     width: '100%',
     height: 40,
-    marginBottom: 20,
+    marginBottom: 15
   },
   txtsignin: {
-    paddingTop: 10,
+    paddingTop: 100,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 28,
     color: 'black',
     fontWeight: '500',
+    color: '#0077BE',
   },
   usercontainer: {
+    flexDirection: 'row',
     paddingStart: 20,
     alignItems: 'center',
     elevation: 10,
     flexDirection: 'row',
     height: 50,
     backgroundColor: 'white',
-    marginHorizontal: 40,
+    marginHorizontal: 10,
     borderRadius: 20,
     marginVertical: 20,
   },
@@ -304,9 +325,8 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   txtforgot: {
-    textAlign: 'right',
-    fontSize: 17,
-    color: 'purple',
+    fontSize: 20,
+    color: '#0077BE',
     fontWeight: '500',
   },
   buttonContainer: {
@@ -314,7 +334,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   button: {
-    backgroundColor: 'purple',
+    backgroundColor: '#0077BE',
     width: 150,
     height: 50,
     borderRadius: 20,
@@ -331,8 +351,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 15,
-    marginHorizontal: 40,
-    height: 20,
+  },
+  txtDont: {
+    fontSize: 17,
+  },
+  txtcreate: {
+    fontSize: 17,
+    color: '#0077BE',
+    fontWeight: '600',
+    marginLeft: 5,
   },
   modalOverlay: {
     flex: 1,
@@ -354,14 +381,14 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   modalButton: {
-    backgroundColor: 'purple',
+    backgroundColor: '#0077BE',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   modalButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

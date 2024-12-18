@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DarkModeProvider } from './contexts/DarkModeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Platform, StatusBar, View, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,7 +13,6 @@ import SignupScreen from "./pages/SignupScreen";
 import ForgotPassword from './pages/ForgotPasswordScreen';
 import ResetCodeVerificationScreen from './pages/ResetCodeVerificationScreen';
 import ResetPasswordScreen from "./pages/ResetPasswordScreen";
-import Subscription from "./pages/subscription";
 import UserDetails from "./pages/UserDetails";
 import AlertSettingsPage from './pages/alertsettingspage';
 import PondSetting from './pages/pondsetting';
@@ -32,6 +30,7 @@ import EditPond from './pages/Editpond';
 import Pond from './pages/ponds';
 import FarmSetup from './pages/farmSetup';
 import CategoriesPage from './pages/categories';
+
 
 const Stack = createStackNavigator();
 
@@ -118,13 +117,14 @@ export default function App() {
           translucent={Platform.OS === 'ios' ? true : false}
         />
         <SafeAreaView style={{ flex: 1, backgroundColor: '#04324d' }}>
-          <DarkModeProvider>
             <NavigationContainer>
               <Stack.Navigator
                 initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}
                 screenOptions={({ navigation, route }) => ({
                   header: () =>
-                    route.name !== 'Login' && route.name !== 'SplashScreen' &&  route.name !== 'Signup' ? (
+
+                    route.name !== 'Login' && route.name !== 'SplashScreen' && route.name !== 'Signup' ? (
+
                       <CustomHeader
                         navigation={navigation}
                         canGoBack={route.name !== 'MainTabs' && route.name !== 'SplashScreen' && route.name !== 'Login' && route.name !== 'Signup'} 
@@ -139,7 +139,6 @@ export default function App() {
                 <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
                 <Stack.Screen name="ResetCodeVerification" component={ResetCodeVerificationScreen} />
                 <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-                <Stack.Screen name="Subscription" component={Subscription} />
                 <Stack.Screen name="PondSetting" component={PondSetting} />
                 <Stack.Screen name="AlertSettingsPage" component={AlertSettingsPage} />
                 <Stack.Screen name="UserDetails" component={UserDetails} />
@@ -147,6 +146,8 @@ export default function App() {
                 <Stack.Screen name="CodeVerification" component={CodeVerificationScreen} />
                 <Stack.Screen name="AddPond" component={AddPond} />
                 <Stack.Screen name="Analytics" component={Analytics} />
+                <Stack.Screen name="Fishbot" component={Fishbot} />
+                <Stack.Screen name="fishguide" component={FishGuideScreen} />
                 <Stack.Screen name="EditProfile" component={Editprofile} />
                 <Stack.Screen name="Transaction" component={Transaction} />
                 <Stack.Screen name="AddTransaction" component={addTransaction} />
@@ -154,12 +155,11 @@ export default function App() {
                 <Stack.Screen name="Pond" component={Pond} />
                 <Stack.Screen name="FarmSetup" component={FarmSetup} />
                 <Stack.Screen name="Categories" component={CategoriesPage} />
+
               </Stack.Navigator>
             </NavigationContainer>
-          </DarkModeProvider>
         </SafeAreaView>
       </View>
     </SafeAreaProvider>
-  );
+  );
 }
-

@@ -1,19 +1,17 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; // Import navigation hook
-import { DarkModeContext } from '../contexts/DarkModeContext';
 
 export default function Profile() {
   const [menuVisible, setMenuVisible] = useState(false);
-  const { isDarkMode } = useContext(DarkModeContext);
   const navigation = useNavigation(); // Use the navigation hook
   const change_plan = () => {
     navigation.navigate('Subscription');
   };
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <View style={[styles.header, isDarkMode && styles.darkHeader]}>
-        <Text style={[styles.title, isDarkMode && styles.darkHeaderText]}>User Details</Text>
+    <View style={[styles.container]}>
+      <View style={[styles.header]}>
+        <Text style={[styles.title]}>User Details</Text>
       </View>
     </View>
   );
@@ -24,21 +22,6 @@ const styles = StyleSheet.create({
     width: '100%',
     flex: 1,
     backgroundColor: '#fff',
-  },
-  darkContainer: {
-    backgroundColor: '#000',
-  },
-  darkHeader: {
-    backgroundColor: '#000',
-  },
-  darkHeaderText: {
-    color: '#fff',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkMenu: {
-    backgroundColor: '#333',
   },
   header: {
     backgroundColor: '#00bcd4',

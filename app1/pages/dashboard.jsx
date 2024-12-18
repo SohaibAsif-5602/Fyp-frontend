@@ -1,4 +1,5 @@
 import React from "react";
+
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import additional icon set
@@ -6,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function Dashboard() {
   const navigation = useNavigation();
+
   // Handler function for card clicks
   const handleCardPress = (title) => {
     Alert.alert(`You clicked on ${title}`);
@@ -17,6 +19,7 @@ export default function Dashboard() {
     <View style={styles.container}>
       <View style={styles.row}>
         <Card
+
           title="Ponds"
           iconSet={MaterialCommunityIcons}
           iconName="water"
@@ -32,20 +35,17 @@ export default function Dashboard() {
       <View style={styles.row}>
         <Card
           title="Inventory"
+
           iconSet={FontAwesome}
           iconName="archive"
-          onPress={() => handleCardPress("Inventory")}
-        />
-        <Card
-          title="Tasks"
-          iconSet={FontAwesome}
-          iconName="tasks"
+
           onPress={() => handleCardPress("Tasks")}
         />
       </View>
       <View style={styles.row}>
         <Card
           title="Farm Setup"
+
           iconSet={FontAwesome}
           iconName="gear"
           onPress={() => navigation.navigate('FarmSetup')}
@@ -61,6 +61,7 @@ export default function Dashboard() {
   );
 }
 
+
 const Card = ({ title, iconSet: IconSet, iconName, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <IconSet name={iconName} size={40} color="#333" style={styles.icon} />
@@ -72,6 +73,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
+
     padding: 20,
   },
   row: {
@@ -90,6 +92,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   icon: {
+    width: 50,
+    height: 50,
+    marginBottom: 10,
     marginBottom: 10,
     color: "green",
   },

@@ -1,18 +1,14 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, Switch, StyleSheet, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { DarkModeContext } from '../contexts/DarkModeContext';
-
-const Logo = () => (
-  <Image
-    source={require('../assets/fish_logo.png')}
-    style={styles.logo}
-    resizeMode="contain"
-  />
-);
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import ProfileImage from '../assets/profile.jpeg';
+import axios from 'axios'; // Import axios for API calls
 
 const Setting = () => {
   const navigation = useNavigation();
+
   const { isDarkMode, setIsDarkMode } = useContext(DarkModeContext);
   const [areAlertsEnabled, setAreAlertsEnabled] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -37,18 +33,23 @@ const Setting = () => {
     });
   };
 
-  const view_fish_guide = () => {
-    navigation.navigate('Fish Guide');
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+  const logout = async () => {
+    console.log('Logging out...');
+    await AsyncStorage.removeItem('token');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }], // Replace 'Login' with the name of your login screen
+    });
   };
 
-  const handleYes = () => {
-    setIsModalVisible(false);
-    setAreAlertsEnabled(false); // Disable auto-action
-  };
-
-  const handleNo = () => {
-    setIsModalVisible(false);
-    setAreAlertsEnabled(true); // Keep auto-action enabled
+  const EditNav = () => {
+    navigation.navigate('EditProfile');
   };
 
   return (
@@ -65,18 +66,20 @@ const Setting = () => {
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
         <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
+
       </View>
 
-      <View style={styles.option}>
-        <Text style={[styles.text, isDarkMode && styles.darkText]}>Turn off auto-action</Text>
-        <Switch value={areAlertsEnabled} onValueChange={toggleAutoAction} />
-      </View>
+      {/* Profile Options */}
+      <View style={styles.optionContainer}>
+        <View style={styles.divider} />
+
 
         <TouchableOpacity style={styles.option} onPress={() => EditNav()}>
           <Icon name="person-outline" size={24} color="#000" />
           <Text style={styles.optionText}>View Profile</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
+
 
         <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('fishguide')}>
           <Icon name="book-outline" size={24} color="#000" />
@@ -101,25 +104,62 @@ const Setting = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '100%',
     flex: 1,
     backgroundColor: '#fff',
-    justifyContent: 'center',
+    padding: 16,
   },
-  darkContainer: {
-    backgroundColor: '#000',
+  profileContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  headertext: {
-    paddingVertical: 17,
-    backgroundColor: '#00bcd4',
-    textAlign: 'center',
-    fontSize: 30,
+  profileImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    marginBottom: 10,
+  },
+  profileName: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
   },
-  darkHeadertext: {
-    backgroundColor: '#000',
+  profileEmail: {
+    color: '#555',
+    marginBottom: 10,
+  },
+  editProfileButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  editProfileText: {
+    color: '#fff',
+  },
+  optionContainer: {
+    marginBottom: 20,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 10,
+    flex: 1,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+  },
+  appVersion: {
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
   },
   optionContainer: {
     marginBottom: 20,

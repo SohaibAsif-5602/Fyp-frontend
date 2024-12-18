@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 import Setting from './setting';
 import NotificationScreen from './notifications';
-
+import Dashboard from './dashboard';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,8 +17,12 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
+
+     
+
           
             if (route.name === 'Dashboard') {
+
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
@@ -32,7 +36,7 @@ function MainTabs() {
         tabBarInactiveTintColor: '#E0E0E0',
         tabBarStyle: {
           backgroundColor: '#04324d',
-          paddingBottom: 10,
+          paddingBottom: 15,
           height: 60,
           
         },
@@ -41,6 +45,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={Dashboard} />
+
       <Tab.Screen name="Notifications" component={NotificationScreen} />
       <Tab.Screen name="Settings" component={Setting} />
       

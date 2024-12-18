@@ -11,14 +11,12 @@ const AlertSettingsPages = () => {
   const [alerts, setAlerts] = useState({
     ph: false,
     temp: false,
-    do: false,
     turbidity: false,
   });
 
   const [actions, setActions] = useState({
     ph: false,
     temp: false,
-    "Dissolved Oxygen": false,
     turbidity: false,
   });
 

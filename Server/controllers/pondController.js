@@ -8,7 +8,7 @@ export const getPondData = (req, res) => {
     const pondId = req.params.pondId;
 
     const query = `
-        SELECT p.channel_id, p.pond_score, i.channel_read 
+        SELECT p.channel_id, p.status, i.channel_read 
         FROM Pond p 
         JOIN Iot i ON p.channel_id = i.channel_id 
         WHERE p.pond_id = ? AND p.user_id = ?
@@ -24,8 +24,17 @@ export const getPondData = (req, res) => {
             return res.status(404).json({ msg: 'Pond not found or access denied' });
         }
 
-        const { channel_id, pond_score, channel_read } = results[0];
-        console.log(channel_id,channel_read);
+        const { channel_id, channel_read, status } = results[0];
+
+        // Check pond status
+        if (status === 'waiting_for_approval') {
+            return res.status(403).json({ msg: 'Pond is waiting for approval' });
+        }
+
+        if (status !== 'approved') {
+            return res.status(400).json({ msg: 'Invalid pond status' });
+        }
+
         const url = `https://api.thingspeak.com/channels/${channel_id}/feeds.json?api_key=${channel_read}&results=100`;
 
         axios.get(url)
@@ -49,10 +58,10 @@ export const getPondData = (req, res) => {
                 }));
 
                 res.status(200).json({
-                    pond_score: pond_score,
-                    temperatureData: temperatureData,
-                    phData: phData,
-                    turbidityData: turbidityData,
+                    status, // Include status in the response
+                    temperatureData,
+                    phData,
+                    turbidityData,
                     dates: [...new Set(formattedDates)],
                 });
             })
@@ -112,8 +121,8 @@ export const addPond = async (req, res) => {
         // Function to insert fish data
         function insertFishData() {
             db.query(
-                'INSERT INTO Fishgroup (age, specie, imagelink) VALUES (?, ?, ?)',
-                [fishAge, fishSpecies, 'default_image_link'], // Replace with actual image link if available
+                'INSERT INTO Fishgroup (age, specie, imagelink,pond_name) VALUES (?, ?, ?,?)',
+                [fishAge, fishSpecies, 'default_image_link',channelName], // Replace with actual image link if available
                 (error, fishResult) => {
                     if (error) {
                         console.error('Error inserting fish data into the database:', error);
@@ -129,7 +138,7 @@ export const addPond = async (req, res) => {
         // Function to insert pond data
         function insertPondData() {
             db.query(
-                'INSERT INTO Pond (channel_id, pond_name, pond_loc, fish_id, user_id, pond_score) VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO Pond (channel_id, pond_name, pond_loc, fish_id, user_id) VALUES (?, ?, ?, ?, ?)',
                 [channelId, channelName, location, fishId, userId, 0], // Assuming pond_score is initialized to 0
                 (error) => {
                     if (error) {
@@ -180,7 +189,7 @@ export const getPonds = (req, res) => {
             p.pond_loc,
             f.specie,
             f.imagelink,
-            p.pond_score
+            p.status
         FROM Pond p
         JOIN Fishgroup f ON p.fish_id = f.id
         WHERE p.user_id = ?`;
@@ -194,3 +203,105 @@ export const getPonds = (req, res) => {
         return res.status(200).json({ ponds: results });
     });
 };
+
+export const editPond = async (req, res) => {
+    const { pondName, location, fishSpecies, fishAge } = req.body;
+    const { pondId } = req.params;
+  
+    console.log(pondId, pondName, location, fishSpecies, fishAge);
+  
+    if (!pondName || !location || !fishSpecies || !fishAge) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+  
+    try {
+      // Update pond details in the database
+      db.query(
+        'UPDATE Pond SET pond_name = ?, pond_loc = ? WHERE pond_id = ?',
+        [pondName, location, pondId],
+        (error) => {
+          if (error) {
+            console.error('Error updating pond:', error);
+            return res.status(500).json({ error: 'Failed to update pond details.' });
+          }
+  
+          // Fetch fish_id associated with the pond
+          db.query(
+            'SELECT fish_id FROM Pond WHERE pond_id = ?',
+            [pondId],
+            (fetchError, results) => {
+              if (fetchError) {
+                console.error('Error fetching fish_id:', fetchError);
+                return res.status(500).json({ error: 'Failed to retrieve fish details.' });
+              }
+  
+              if (results.length === 0) {
+                return res.status(404).json({ error: 'Pond not found.' });
+              }
+  
+              const fishId = results[0].fish_id;
+  
+              // Update fish details in the Fishgroup table
+              db.query(
+                'UPDATE Fishgroup SET age = ?, specie = ? ,pond_name = ? WHERE id = ?',
+                [fishAge, fishSpecies,pondName, fishId],
+                (fishError) => {
+                  if (fishError) {
+                    console.error('Error updating fish data:', fishError);
+                    return res.status(500).json({ error: 'Failed to update fish details.' });
+                  }
+  
+                  res.status(200).json({ message: 'Pond and fish details updated successfully.' });
+                }
+              );
+            }
+          );
+        }
+      );
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      res.status(500).json({ error: 'An unexpected error occurred.' });
+    }
+  };
+  
+  export const getPondById = (req, res) => {
+    const pondId = req.params.pondId; // Extract pond ID from request parameters
+    const userId = req.userId;
+    
+    const query = `
+        SELECT
+            p.pond_id,
+            p.pond_name,
+            p.pond_loc,
+            f.specie,
+            f.age AS fish_age,
+            f.imagelink AS fish_image,
+            p.status
+        FROM Pond p
+        JOIN Fishgroup f ON p.fish_id = f.id
+        WHERE p.pond_id = ? AND p.user_id = ?`;
+
+    db.query(query, [pondId, userId], (err, result) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).json({ msg: "Database query error" });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ msg: "Pond not found or access denied" });
+        }
+
+        const pond = {
+            pondId: result[0].pond_id,
+            pondName: result[0].pond_name,
+            pondLocation: result[0].pond_loc,
+            fishSpecies: result[0].specie,
+            fishAge: result[0].fish_age,
+            fishImage: result[0].fish_image,
+            status: result[0].status,
+        };
+
+        return res.status(200).json({ pond });
+    });
+};
+
