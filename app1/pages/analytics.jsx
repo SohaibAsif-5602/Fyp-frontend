@@ -12,6 +12,7 @@ import { LineChart } from 'react-native-chart-kit';
 import RNPickerSelect from 'react-native-picker-select';
 import { useNavigation, useRoute } from '@react-navigation/native'; // Import useRoute
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SpinningImageLoader from '../contexts/SpinningImageLoader';
 export default function Analytics() {
   const navigation = useNavigation();
   const route = useRoute(); // Use useRoute to get parameters
@@ -95,7 +96,7 @@ export default function Analytics() {
     
   const fetchFish = async (pondName) => {
     try {
-      const baseUrl = 'http://192.168.18.86:8000/get-fish'; // Base API URL
+      const baseUrl = 'http://192.168.10.10:8000/get-fish'; // Base API URL
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         console.log('No token found. Redirecting to login.');
@@ -134,7 +135,7 @@ export default function Analytics() {
   
   // Call fetchFish when the component mounts
   useEffect(() => {
-    // fetchFish(pondName);
+    fetchFish(pondName);
   }, []);
   
   const fetchPrediction = async () => {
@@ -175,7 +176,7 @@ export default function Analytics() {
         Fish: fish, // Use the fetched fish value
       };
   
-      const url = 'http://192.168.18.86:8000/predict'; // Hardcoded URL
+      const url = 'http://192.168.10.10:8000/predict'; // Hardcoded URL
       console.log('Request URL:', url);
       console.log('Request Payload:', payload);
   
@@ -199,9 +200,9 @@ export default function Analytics() {
   };  
   // Call fetchPrediction whenever lastDateData changes
   useEffect(() => {
-    // if (lastDateData) {
-    //   fetchPrediction();
-    // }
+    if (lastDateData) {
+     fetchPrediction();
+   }
   }, [lastDateData]);
   
   
@@ -262,9 +263,14 @@ export default function Analytics() {
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>{title}</Text>
         {loading || data.length === 0 ? ( // Check if data is empty
-          <View style={styles.skeletonGraph}>
-            <Text style={styles.noDataText}>No Data Available</Text>
-          </View>
+          <View style={styles.loaderContainer}>
+          {/* Replace ActivityIndicator with SpinningImageLoader */}
+          <SpinningImageLoader 
+            source={require('../assets/fish_logo.png')} // Use your custom loader image
+            size={50} // Adjust the size as needed
+            duration={2000} // Customize the animation duration if needed
+          />
+        </View>
         ) : (
           <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }}>
             

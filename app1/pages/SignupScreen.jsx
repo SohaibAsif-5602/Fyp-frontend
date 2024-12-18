@@ -118,16 +118,8 @@ const SignupScreen = () => {
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-            <Text style={styles.buttonText}>Create</Text>
+            <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
-        </View>
-        <View style={styles.txtdontcontainer}>
-          <Text style={styles.txtDont}>Or sign in with</Text>
-        </View>
-        <View style={styles.iconcontainer}>
-          <Entypo name="facebook" size={24} color="blue" style={styles.signinicon} />
-          <Fontisto name="google" size={24} color="orange" style={styles.signinicon} />
-          <AntDesign name="twitter" size={24} color="blue" style={styles.signinicon} />
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <View style={styles.txtdontcontainer1}>
@@ -165,137 +157,135 @@ export default SignupScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F8F9FA', // Light background for a clean look
     opacity: 1,
   },
   con: {
-    paddingTop: 100,
+    paddingTop: 50,
+    alignItems: 'center',
   },
   txthellocontainer: {
     marginTop: 20,
-    width: '100%',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   txthello: {
     textAlign: 'center',
-    fontSize: 35,
-    color: 'purple',
-    fontWeight: '500',
+    fontSize: 38,
+    color: '#0077BE', // Slightly softer purple
+    fontWeight: '600',
   },
   usercontainer: {
-    paddingStart: 20,
-    alignItems: 'center',
-    elevation: 10,
+    paddingHorizontal: 15,
     flexDirection: 'row',
-    height: 50,
+    alignItems: 'center',
+    elevation: 5,
     backgroundColor: 'white',
-    marginHorizontal: 40,
-    borderRadius: 20,
-    marginVertical: 15,
+    height: 60,
+    marginHorizontal: 20,
+    borderRadius: 30, // More rounded corners
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   usericon: {
     paddingStart: 10,
   },
   usertextfield: {
-    paddingStart: 20,
-    width: '80%',
-    height: 50,
-    fontSize: 20,
-    color: 'black',
+    paddingStart: 15,
+    flex: 1, // Adjust width automatically
+    height: 60,
+    fontSize: 18,
+    color: '#333', // Darker text color
   },
   buttonContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
   },
   button: {
-    backgroundColor: 'purple',
-    width: 150,
+    backgroundColor: '#0077BE', // Primary button color
+    width: 160,
     height: 50,
-    borderRadius: 20,
-    alignItems: 'center',
+    borderRadius: 25,
     justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: '500',
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   txtdontcontainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    marginHorizontal: 40,
-    height: 30,
+    marginTop: 15,
   },
   txtDont: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: 'purple',
+    fontSize: 15,
+    color: '#6A0DAD',
     fontWeight: '500',
   },
   iconcontainer: {
-    paddingLeft: 60,
     flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 10,
-    marginHorizontal: 40,
     height: 40,
-  },
-  signinicon: {
-    backgroundColor: '#f0f0f0',
-    height: 30,
-    marginLeft: 10,
-    width: 30,
-    marginHorizontal: 10,
-    elevation: 20,
-    borderRadius: 25,
   },
   txtdontcontainer1: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    marginHorizontal: 40,
-    height: 30,
   },
   txtDont1: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: 'black',
-    fontWeight: '500',
+    fontSize: 17,
+    color: '#333',
   },
   txtcreate1: {
-    textAlign: 'center',
-    fontSize: 19,
-    color: 'purple',
-    fontWeight: '500',
+    fontSize: 17,
+    color: '#0077BE',
+    fontWeight: '600',
+    marginLeft: 5,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContainer: {
-    width: 300,
+    width: 320,
     padding: 20,
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   modalText: {
     fontSize: 18,
+    color: '#333',
     textAlign: 'center',
-    marginBottom: 20,
-    color: 'black',
+    marginBottom: 15,
   },
   modalButton: {
-    backgroundColor: 'purple',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    backgroundColor: '#6A0DAD',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
   },
   modalButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
 });
+

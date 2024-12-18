@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 20,
-    color: 'purple',
+    color: '#0077BE',
   },
   input: {
     width: '100%',
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: 'purple',
+    backgroundColor: '#0077BE',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
