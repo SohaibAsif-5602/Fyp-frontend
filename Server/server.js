@@ -6,6 +6,8 @@ import authRoutes from './routes/authRoutes.js';
 import pondRoutes from './routes/pondRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 
 dotenv.config(); 
 
@@ -19,6 +21,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/ponds', pondRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/categories', categoryRoutes);
+
 
 app.listen(8080, '0.0.0.0', () => {
     console.log("Server Running on port 8080");

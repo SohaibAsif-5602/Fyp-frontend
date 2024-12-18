@@ -24,6 +24,14 @@ import CodeVerificationScreen from './pages/VerificationEntry';
 import logo from './assets/machiro.png';
 import Analytics from './pages/analytics';
 import Editprofile from './pages/Editprofile';
+import FishGuideScreen from './pages/fishguide';
+import Fishbot from './pages/fishbot';
+import Transaction from './pages/transaction';
+import addTransaction  from './pages/addtransaction';
+import EditPond from './pages/Editpond';
+import Pond from './pages/ponds';
+import FarmSetup from './pages/farmSetup';
+import CategoriesPage from './pages/categories';
 
 const Stack = createStackNavigator();
 
@@ -116,7 +124,7 @@ export default function App() {
                 initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}
                 screenOptions={({ navigation, route }) => ({
                   header: () =>
-                    route.name !== 'Login' && route.name !== 'SplashScreen' ? (
+                    route.name !== 'Login' && route.name !== 'SplashScreen' &&  route.name !== 'Signup' ? (
                       <CustomHeader
                         navigation={navigation}
                         canGoBack={route.name !== 'MainTabs' && route.name !== 'SplashScreen' && route.name !== 'Login' && route.name !== 'Signup'} 
@@ -140,6 +148,12 @@ export default function App() {
                 <Stack.Screen name="AddPond" component={AddPond} />
                 <Stack.Screen name="Analytics" component={Analytics} />
                 <Stack.Screen name="EditProfile" component={Editprofile} />
+                <Stack.Screen name="Transaction" component={Transaction} />
+                <Stack.Screen name="AddTransaction" component={addTransaction} />
+                <Stack.Screen name="EditPond" component={EditPond} />
+                <Stack.Screen name="Pond" component={Pond} />
+                <Stack.Screen name="FarmSetup" component={FarmSetup} />
+                <Stack.Screen name="Categories" component={CategoriesPage} />
               </Stack.Navigator>
             </NavigationContainer>
           </DarkModeProvider>

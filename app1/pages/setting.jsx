@@ -22,8 +22,19 @@ const Setting = () => {
     setIsModalVisible(true); // Show modal when the switch is toggled
   };
 
-  const viewAlertSettingsPage = () => {
-    navigation.navigate('AlertSettingsPage');
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+  const logout = async () => {
+    console.log('Logging out...');
+    await AsyncStorage.removeItem('token');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
 
   const view_fish_guide = () => {
@@ -41,11 +52,19 @@ const Setting = () => {
   };
 
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-
-      <View style={styles.option}>
-        <Text style={[styles.text, isDarkMode && styles.darkText]}>Dark Mode</Text>
-        <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
+    <ScrollView style={styles.container}>
+      {/* Profile Info */}
+      <View style={styles.profileContainer}>
+        <Image
+          source={
+            userData.imagelink && userData.imagelink.startsWith('http')
+              ? { uri: userData.imagelink }
+              : require('../assets/profile.jpeg')
+          }
+          style={styles.profileImage}
+        />
+        <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
+        <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
       </View>
 
       <View style={styles.option}>
@@ -53,52 +72,30 @@ const Setting = () => {
         <Switch value={areAlertsEnabled} onValueChange={toggleAutoAction} />
       </View>
 
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={view_fish_guide}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Fish Guide</Text>
+        <TouchableOpacity style={styles.option} onPress={() => EditNav()}>
+          <Icon name="person-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>View Profile</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Help Center</Text>
+        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('fishguide')}>
+          <Icon name="book-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Fish Guide</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.option}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Are you sure?')}>
-          <Text style={[styles.text, isDarkMode && styles.darkText]}>Learn More about Machiro</Text>
+        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Fishbot')}>
+          <Icon name="help-circle-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Help Center</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.logoContainer}>
-        <Logo />
-      </View>
-
-      {/* Modal for confirmation */}
-      <Modal
-        transparent={true}
-        visible={isModalVisible}
-        animationType="fade"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
-            <Text style={[styles.modalText, isDarkMode && styles.darkText]}>
-              Are you sure you want to turn off automatic corrective actions from all your ponds? You can still choose to take action on an alert.
-            </Text>
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButton} onPress={handleNo}>
-                <Text style={styles.buttonText}>No</Text>
-              </Pressable>
-              <Pressable style={styles.modalButton} onPress={handleYes}>
-                <Text style={styles.buttonText}>Yes</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+        <TouchableOpacity style={styles.option} onPress={logout}>
+          <Icon name="exit-outline" size={24} color="#000" />
+          <Text style={styles.optionText}>Log Out</Text>
+          <Icon name="chevron-forward-outline" size={24} color="#000" />
+        </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -124,70 +121,14 @@ const styles = StyleSheet.create({
   darkHeadertext: {
     backgroundColor: '#000',
   },
-  text: {
-    paddingTop: 30,
-    fontSize: 20,
-    padding: 10,
-    color: '#000',
-  },
-  darkText: {
-    color: '#fff',
+  optionContainer: {
+    marginBottom: 20,
   },
   option: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 10,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  logo: {
-    width: 200,
-    height: 200,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-    alignItems: 'center',
-  },
-  darkModalContent: {
-    backgroundColor: '#333',
-  },
-  modalText: {
-    fontWeight: 'bold',
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '30%',
-    marginLeft: 250,
-  },
-  modalButton: {
-    flex: 1,
-    padding: 10,
-    marginHorizontal: 2,
-    backgroundColor: 'red',
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  button: {
-    // Add any button-specific styles here if needed
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
   },
 });
 
