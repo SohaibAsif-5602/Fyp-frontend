@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal } from 'react-native';
+import {Image, StyleSheet, Text, View, TextInput, TouchableOpacity, Modal } from 'react-native';
 import React, { useState } from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Fontisto from 'react-native-vector-icons/Fontisto';
@@ -70,6 +70,13 @@ const SignupScreen = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.topHalf}>
+              <Image
+                source={require('../assets/machiro.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
       <View style={styles.con}>
         <View style={styles.txthellocontainer}>
           <Text style={styles.txthello}>Create Account</Text>
@@ -160,10 +167,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA', // Light background for a clean look
     opacity: 1,
   },
+  topHalf: {
+    flex: 1,
+    backgroundColor: '#04324d',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   con: {
     paddingTop: 50,
     alignItems: 'center',
   },
+  logo: {
+    width: 280,              // Slightly wider for a balanced look
+    height: 60,
+    padding: 35,
+    marginBottom: 15,              // Maintain a slim height
+    alignSelf: 'center',     // Center horizontally
+    borderRadius: 25,        // More rounded corners for a smooth look
+  }, 
   txthellocontainer: {
     marginTop: 20,
     marginBottom: 30,
@@ -242,6 +263,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   txtDont1: {
+    marginBottom: 40,
     fontSize: 17,
     color: '#333',
   },

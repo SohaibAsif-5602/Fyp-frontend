@@ -272,14 +272,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 350,
+    paddingTop: 10,
+    paddingBottom: 400,
   },
   logo: {
     width: 280,              // Slightly wider for a balanced look
     height: 60,
     padding: 35,
-    marginBottom: 20,              // Maintain a slim height
+    marginBottom: 15,              // Maintain a slim height
     alignSelf: 'center',     // Center horizontally
     borderRadius: 25,        // More rounded corners for a smooth look
   },  
@@ -289,19 +289,13 @@ const styles = StyleSheet.create({
   txthellocontainer: {
     width: '100%',
   },
-  txthello: {
-    textAlign: 'center',
-    fontSize: 65,
-    color: 'purple',
-    fontWeight: '500',
-  },
   txtsignincontainer: {
     width: '100%',
     height: 40,
     marginBottom: 15
   },
   txtsignin: {
-    paddingTop: 10,
+    paddingTop: 100,
     textAlign: 'center',
     fontSize: 28,
     color: 'black',

@@ -119,7 +119,7 @@ export default function App() {
                 initialRouteName={isNewUser ? 'SplashScreen' : 'Login'}
                 screenOptions={({ navigation, route }) => ({
                   header: () =>
-                    route.name !== 'Login' && route.name !== 'SplashScreen' ? (
+                    route.name !== 'Login' && route.name !== 'SplashScreen' && route.name !== 'Signup' ? (
                       <CustomHeader
                         navigation={navigation}
                         canGoBack={route.name !== 'MainTabs' && route.name !== 'SplashScreen' && route.name !== 'Login' && route.name !== 'Signup'} 
