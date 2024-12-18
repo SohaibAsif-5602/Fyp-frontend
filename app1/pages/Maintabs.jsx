@@ -2,8 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-import Ponds from './ponds';
-import ProfileScreen from './profile';
+
 import Setting from './setting';
 import NotificationScreen from './notifications';
 import Dashboard from './dashboard';
@@ -18,11 +17,12 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'Ponds') {
-            iconName = focused ? 'water' : 'water-outline';
-          // } else if (route.name === 'Profile') {
-          //   iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'Dashboard') {
+
+     
+
+          
+            if (route.name === 'Dashboard') {
+
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
@@ -45,8 +45,6 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={Dashboard} />
-      {/* <Tab.Screen name="Profile" component={ProfileScreen} /> */}
-      <Tab.Screen name="Ponds" component={Ponds} />
 
       <Tab.Screen name="Notifications" component={NotificationScreen} />
       <Tab.Screen name="Settings" component={Setting} />

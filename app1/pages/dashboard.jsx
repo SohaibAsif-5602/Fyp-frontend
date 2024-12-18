@@ -1,7 +1,13 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from "react-native";
+
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import additional icon set
+import { useNavigation } from '@react-navigation/native';
 
 export default function Dashboard() {
+  const navigation = useNavigation();
+
   // Handler function for card clicks
   const handleCardPress = (title) => {
     Alert.alert(`You clicked on ${title}`);
@@ -13,37 +19,41 @@ export default function Dashboard() {
     <View style={styles.container}>
       <View style={styles.row}>
         <Card
-          title="Sites & Ponds"
-        //   icon={require("./assets/pond.png")}
-          onPress={() => handleCardPress("Sites & Ponds")}
+
+          title="Ponds"
+          iconSet={MaterialCommunityIcons}
+          iconName="water"
+          onPress={() => navigation.navigate('Pond')}
         />
         <Card
           title="Transactions"
-        //   icon={require("./assets/money.png")}
-          onPress={() => handleCardPress("Transactions")}
+          iconSet={FontAwesome}
+          iconName="money"
+          onPress={() => navigation.navigate('Transaction')}
         />
       </View>
       <View style={styles.row}>
         <Card
           title="Inventory"
-        //   icon={require("./assets/inventory.png")}
-          onPress={() => handleCardPress("Inventory")}
-        />
-        <Card
-          title="Tasks"
-        //   icon={require("./assets/tasks.png")}
+
+          iconSet={FontAwesome}
+          iconName="archive"
+
           onPress={() => handleCardPress("Tasks")}
         />
       </View>
       <View style={styles.row}>
         <Card
           title="Farm Setup"
-        //   icon={require("./assets/setup.png")}
-          onPress={() => handleCardPress("Farm Setup")}
+
+          iconSet={FontAwesome}
+          iconName="gear"
+          onPress={() => navigation.navigate('FarmSetup')}
         />
         <Card
           title="Reports"
-        //   icon={require("./assets/reports.png")}
+          iconSet={FontAwesome}
+          iconName="line-chart"
           onPress={() => handleCardPress("Reports")}
         />
       </View>
@@ -51,9 +61,10 @@ export default function Dashboard() {
   );
 }
 
-const Card = ({ title, icon, onPress }) => (
+
+const Card = ({ title, iconSet: IconSet, iconName, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
-    <Image source={icon} style={styles.icon} />
+    <IconSet name={iconName} size={40} color="#333" style={styles.icon} />
     <Text style={styles.text}>{title}</Text>
   </TouchableOpacity>
 );
@@ -62,7 +73,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-    padding: 10,
+
+    padding: 20,
   },
   row: {
     flexDirection: "row",
@@ -83,6 +95,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginBottom: 10,
+    marginBottom: 10,
+    color: "green",
   },
   text: {
     fontSize: 16,

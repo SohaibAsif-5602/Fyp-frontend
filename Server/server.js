@@ -7,7 +7,7 @@ import pondRoutes from './routes/pondRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
-dotenv.config(); 
+import categoryRoutes from './routes/categoryRoutes.js';
 
 const app = express();
 app.use(cors());
@@ -20,7 +20,7 @@ app.use('/api/ponds', pondRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/transactions', transactionRoutes);
-
+app.use('/api/categories', categoryRoutes);
 
 
 app.listen(8080, '0.0.0.0', () => {

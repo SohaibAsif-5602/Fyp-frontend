@@ -8,35 +8,29 @@ import axios from 'axios'; // Import axios for API calls
 
 const Setting = () => {
   const navigation = useNavigation();
-  const [userData, setUserData] = useState({
-    username: '',
-    email: '',
-    imagelink: '',
-    D_O_B: '',
-    contact_on: '',
-    gender: '',
-  });
 
-  const fetchUserData = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        navigation.navigate('Login');
-        return;
-      }
+  const { isDarkMode, setIsDarkMode } = useContext(DarkModeContext);
+  const [areAlertsEnabled, setAreAlertsEnabled] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-      const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/users', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const toggleDarkMode = () => setIsDarkMode((prevState) => !prevState);
+  const toggleAutoAction = () => {
+    setIsModalVisible(true); // Show modal when the switch is toggled
+  };
 
-      setUserData(response.data);
-      console.log(response.data); // Log for debugging
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      Alert.alert('Error', 'Failed to fetch user data');
-    }
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+  const logout = async () => {
+    console.log('Logging out...');
+    await AsyncStorage.removeItem('token');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
 
   useFocusEffect(
@@ -72,39 +66,38 @@ const Setting = () => {
         />
         <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
         <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
-        
+
       </View>
 
       {/* Profile Options */}
       <View style={styles.optionContainer}>
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.option} onPress={() => {EditNav();}}>
-          <Icon name="trash-outline" size={24} color="#000" />
+
+        <TouchableOpacity style={styles.option} onPress={() => EditNav()}>
+          <Icon name="person-outline" size={24} color="#000" />
           <Text style={styles.optionText}>View Profile</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option} onPress={() => {    navigation.navigate('fishguide');
-}}>
-          <Icon name="time-outline" size={24} color="#000" />
+
+        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('fishguide')}>
+          <Icon name="book-outline" size={24} color="#000" />
           <Text style={styles.optionText}>Fish Guide</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => {navigation.navigate('Fishbot')}}>
-          <Icon name="time-outline" size={24} color="#000" />
+
+        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Fishbot')}>
+          <Icon name="help-circle-outline" size={24} color="#000" />
           <Text style={styles.optionText}>Help Center</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option} onPress={logout}>
-          <Icon name="log-out-outline" size={24} color="#000" />
+          <Icon name="exit-outline" size={24} color="#000" />
           <Text style={styles.optionText}>Log Out</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
-      </View>
-
-      {/* App Version */}
     </ScrollView>
   );
 };
@@ -167,6 +160,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#888',
     marginTop: 20,
+  },
+  optionContainer: {
+    marginBottom: 20,
+  },
+  option: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
   },
 });
 
