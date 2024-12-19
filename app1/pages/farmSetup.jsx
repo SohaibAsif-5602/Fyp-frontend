@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginBottom: 10,
-    color: "green", // Can be customized further
+    color: "#0077BE", // Can be customized further
   },
   text: {
     fontSize: 16,

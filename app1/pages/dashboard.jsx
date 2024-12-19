@@ -32,7 +32,7 @@ export default function Dashboard() {
           onPress={() => navigation.navigate('Transaction')}
         />
       </View>
-     
+   
       <View style={styles.row}>
         <Card
           title="Farm Setup"
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     height: 50,
     marginBottom: 10,
     marginBottom: 10,
-    color: "green",
+    color: "#0077BE",
   },
   text: {
     fontSize: 16,

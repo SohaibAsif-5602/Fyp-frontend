@@ -27,7 +27,7 @@ const Setting = () => {
 
       const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/users', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization:`Bearer ${token}`,
         },
       });
 
