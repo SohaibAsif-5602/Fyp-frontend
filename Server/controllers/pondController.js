@@ -72,7 +72,6 @@ export const getPondData = (req, res) => {
     });
 };
 
-
 export const addPond = async (req, res) => {
     const { channelName, location, fishSpecies, fishAge } = req.body;
     const userId = req.userId;

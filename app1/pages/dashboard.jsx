@@ -32,16 +32,7 @@ export default function Dashboard() {
           onPress={() => navigation.navigate('Transaction')}
         />
       </View>
-      <View style={styles.row}>
-        <Card
-          title="Inventory"
-
-          iconSet={FontAwesome}
-          iconName="archive"
-
-          onPress={() => handleCardPress("Tasks")}
-        />
-      </View>
+     
       <View style={styles.row}>
         <Card
           title="Farm Setup"

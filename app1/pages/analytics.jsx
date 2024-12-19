@@ -263,14 +263,7 @@ export default function Analytics() {
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>{title}</Text>
         {loading || data.length === 0 ? ( // Check if data is empty
-          <View style={styles.loaderContainer}>
-          {/* Replace ActivityIndicator with SpinningImageLoader */}
-          <SpinningImageLoader 
-            source={require('../assets/fish_logo.png')} // Use your custom loader image
-            size={50} // Adjust the size as needed
-            duration={2000} // Customize the animation duration if needed
-          />
-        </View>
+          <Text></Text>
         ) : (
           <ScrollView horizontal contentContainerStyle={{ flexGrow: 1 }}>
             
@@ -305,6 +298,18 @@ export default function Analytics() {
       </View>
     );
   };
+
+    if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+          <SpinningImageLoader 
+            source={require('../assets/loader.png')} // Use your custom loader image
+            size={100} // Adjust the size as needed
+            duration={2000} // Customize the animation duration if needed
+          />
+        </View>
+    );
+  }
   
   
   return (
@@ -362,9 +367,18 @@ export default function Analytics() {
         {selectedChart === 'Turbidity' && renderChart(filteredData, 'TURBIDITY CHART')}
 
         <Text style={styles.fishHealth}>
-            Fish Health - <Text style={styles.fishHealthValue}>{fishHealth}%</Text> Okay
-          </Text>
-          
+          Fish Health -{' '}
+        <Text
+        style={[
+        styles.fishHealthValue,
+        { color: fishHealth < 60 ? 'red' : 'green' }, 
+        ]}
+      >
+      {fishHealth}%
+      </Text>{' '}
+      {fishHealth < 60 ? 'Warning' : 'Healthy'} 
+      </Text>
+
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlertHistory')}>
             <Text style={styles.buttonText}>View Alerts History</Text>
@@ -389,6 +403,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f7ff',
     borderRadius: 10,
     elevation: 2,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   lastDateTitle: {
     fontSize: 18,

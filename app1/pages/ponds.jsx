@@ -89,8 +89,7 @@ const PondList = () => {
             <Text style={styles.city}>{pond.pond_name}</Text>
             <Text style={styles.fish}>{pond.pond_loc}</Text>
             <Text style={styles.fish}>{pond.specie}</Text>
-            <Text style={styles.health}>Health: {pond.pond_score?.toFixed(2)}%</Text>
-            {pond.pond_score < 50 && <Text style={styles.warning}>⚠ Health Warning</Text>}
+            
           </View>
         </TouchableOpacity>
         <TouchableOpacity
