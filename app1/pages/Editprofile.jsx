@@ -17,6 +17,7 @@ const EditProfileScreen = () => {
   const [imageFile, setImageFile] = useState(null);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [pickedImage, setPickedImage] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -86,26 +87,31 @@ const EditProfileScreen = () => {
         Alert.alert('Error', 'You must be logged in to update your profile.');
         return;
       }
-
+  
       const formData = new FormData();
       formData.append('username', UserName);
       formData.append('email', email);
       formData.append('D_O_B', birth.toISOString().split('T')[0]);
       formData.append('contact_no', phoneNumber.trim() || null);
       formData.append('gender', gender);
-      formData.append('imageBase64', pickedImage.base64);
-
+  
+      // Only append the image if it's been picked
+      if (pickedImage) {
+        formData.append('imageBase64', pickedImage.base64);
+      }
+  
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
+  
       const response = await axios.post(`${apiUrl}/api/users`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       if (response.status === 200) {
         Alert.alert('Success', 'Profile updated successfully.');
+        setIsEditing(false); // Exit editing mode after saving
         fetchUserData(); // Re-fetch data after successful update
       }
     } catch (error) {
@@ -113,6 +119,7 @@ const EditProfileScreen = () => {
       Alert.alert('Error', 'Failed to update profile. Please check your network or contact support.');
     }
   };
+  
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -139,36 +146,59 @@ const EditProfileScreen = () => {
       <Text style={styles.header}>Edit Profile</Text>
 
       <View style={styles.inputContainer}>
-        <TextInput style={styles.input} placeholder="User Name" value={UserName} onChangeText={setUserName} />
-        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
-        <View style={styles.phoneContainer}>
-          <Text style={styles.countryCode}>+92</Text>
-          <TextInput style={styles.phoneInput} placeholder="Phone Number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" />
-        </View>
-        <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-          <Text>{birth ? birth.toDateString() : 'Select Date of Birth'}</Text>
-        </TouchableOpacity>
-        <DateTimePickerModal isVisible={isDatePickerVisible} mode="date" onConfirm={handleConfirm} onCancel={hideDatePicker} date={birth} />
-        <RNPickerSelect
-          onValueChange={(value) => setGender(value)}
-          items={[
-            { label: 'Male', value: 'male' },
-            { label: 'Female', value: 'female' },
-            { label: 'Other', value: 'other' },
-          ]}
-          placeholder={{ label: 'Gender', value: null }}
-          value={gender}
-          style={pickerSelectStyles}
-        />
+
+        {isEditing ? (
+          <>
+            <TextInput style={styles.input} placeholder="User Name" value={UserName} onChangeText={setUserName} />
+            <TextInput style={styles.input} placeholder="Email" value={email} editable={false} />
+            <View style={styles.phoneContainer}>
+              <Text style={styles.countryCode}>+92</Text>
+              <TextInput style={styles.phoneInput} placeholder="Phone Number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" />
+            </View>
+            <TouchableOpacity style={styles.input} onPress={showDatePicker}>
+              <Text>{birth ? birth.toDateString() : 'Select Date of Birth'}</Text>
+            </TouchableOpacity>
+            <DateTimePickerModal isVisible={isDatePickerVisible} mode="date" onConfirm={handleConfirm} onCancel={hideDatePicker} date={birth} />
+            <RNPickerSelect
+              onValueChange={(value) => setGender(value)}
+              items={[
+                { label: 'Male', value: 'male' },
+                { label: 'Female', value: 'female' },
+                { label: 'Other', value: 'other' },
+              ]}
+              placeholder={{ label: 'Gender', value: null }}
+              value={gender}
+              style={pickerSelectStyles}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.input} placeholder="User Name">{UserName}</Text>
+            <Text style={styles.input} placeholder="Email">{email}</Text>
+            <View style={styles.phoneContainer}>
+              <Text style={styles.countryCode}>+92</Text>
+              <Text style={styles.phoneInput}>{phoneNumber}</Text>
+            </View>
+            <Text style={styles.input}>{birth ? birth.toDateString() : 'Select Date of Birth'}</Text>
+            <Text style={styles.input}>{gender}</Text>
+          </>
+        )}
       </View>
 
-      <TouchableOpacity style={styles.saveChangesButton} onPress={updateProfile}>
-        <Text style={styles.saveChangesText}>Save Changes</Text>
-      </TouchableOpacity>
+      {isEditing && (
+        <TouchableOpacity style={styles.saveChangesButton} onPress={updateProfile}>
+          <Text style={styles.saveChangesText}>Save Changes</Text>
+        </TouchableOpacity>
+      )}
+
+      {!isEditing && (
+        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+          <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -219,43 +249,64 @@ const styles = StyleSheet.create({
   },
   countryCode: {
     paddingHorizontal: 10,
-    fontSize: 16,
+    paddingVertical: 5,
+    backgroundColor: '#eee',
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
   },
   phoneInput: {
     flex: 1,
     padding: 10,
   },
   saveChangesButton: {
-    backgroundColor: '#28a745',
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: '#0077BE',
+    padding: 15,
+    borderRadius: 28,
+    width: '50%',
+    alignSelf: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginVertical: 10,
   },
   saveChangesText: {
     color: '#fff',
     fontSize: 16,
   },
+  editButton: {
+    backgroundColor: '#0077BE',
+    padding: 15,
+    borderRadius: 28,
+    width: '50%',
+    alignSelf: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
 });
 
-const pickerSelectStyles = StyleSheet.create({
+const pickerSelectStyles = {
   inputIOS: {
+    color: 'black',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    color: '#000',
+    borderColor: 'gray',
+    backgroundColor: 'white',
+    fontSize: 16,
   },
   inputAndroid: {
+    color: 'black',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    color: '#000',
+    borderColor: 'gray',
+    backgroundColor: 'white',
+    fontSize: 16,
   },
-});
-
+};
 
 export default EditProfileScreen;

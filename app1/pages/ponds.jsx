@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Modal, Ale
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
-
+import axios from 'axios';
 const PondList = () => {
   const navigation = useNavigation();
   const [ponds, setPonds] = useState([]);
@@ -54,6 +54,36 @@ const PondList = () => {
     }, [navigation])
   );
 
+
+  const deletePond = async (pondId) => {
+    console.log('Deleting pond:', pondId);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.log('No token found. Redirecting to login.');
+        navigation.navigate('Login');
+        return;
+      }
+  
+      const response = await axios.delete(`${process.env.EXPO_PUBLIC_API_URL}/api/ponds/delete-pond/${pondId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 200) {
+        console.log('Pond deleted successfully.');
+        
+        navigation.navigate('MainTabs'); 
+      } else {
+        console.error('Failed to delete the pond. Status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error deleting pond:', error.message);
+    }
+  };
+
   const handleBrowseClick = (pond, index) => {
     // Measure the position of the browse icon
     browseIconRefs.current[index]?.measure(
@@ -83,14 +113,12 @@ const PondList = () => {
           onPress={() => navigation.navigate('Analytics', { pondId: pond.pond_id, pondName: pond.pond_name })}
         >
           <View style={styles.imgcontainer}>
-            <Image source={{ uri: pond.imagelink }} style={styles.pondImage} />
+            <Image source={{ uri: "https://res.cloudinary.com/dfegwo1lv/image/upload/v1734630806/images_1_bdx1zo.jpg" }} style={styles.pondImage} />
           </View>
           <View style={styles.pondDetails}>
             <Text style={styles.city}>{pond.pond_name}</Text>
             <Text style={styles.fish}>{pond.pond_loc}</Text>
             <Text style={styles.fish}>{pond.specie}</Text>
-            <Text style={styles.health}>Health: {pond.pond_score?.toFixed(2)}%</Text>
-            {pond.pond_score < 50 && <Text style={styles.warning}>⚠ Health Warning</Text>}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -132,12 +160,16 @@ const PondList = () => {
               <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Analytics', { pond: selectedPond.pond_id })}}>
                 <Text style={styles.modalOptionText}>View Details</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);navigation.navigate('Transaction')}}>
+              <TouchableOpacity style={styles.modalOption} onPress={() => {setModalVisible(false);deletePond(selectedPond.pond_id)}}>
                 <Text style={styles.modalOptionText}>Delete </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalOption} onPress={() =>{setModalVisible(false); navigation.navigate('AlertSettingsPage', { pondId: selectedPond.pond_id,pondName:selectedPond.pond_name })}}>
                 <Text style={styles.modalOptionText}>Settings</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOption} onPress={() =>{setModalVisible(false); navigation.navigate('AlertHistory', { pondId: selectedPond.pond_id})}}>
+                <Text style={styles.modalOptionText}>Alerts History</Text>
+              </TouchableOpacity>
+              
             </View>
           </TouchableOpacity>
         </Modal>
@@ -187,7 +219,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 0,
     justifyContent: 'center',
-    marginLeft: 15,
+    marginLeft: 25,
   },
   unapprovedName: {
     fontSize: 18,

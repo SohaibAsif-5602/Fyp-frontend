@@ -30,7 +30,7 @@ import EditPond from './pages/Editpond';
 import Pond from './pages/ponds';
 import FarmSetup from './pages/farmSetup';
 import CategoriesPage from './pages/categories';
-
+import AlertHistory from './pages/alerthistory';
 
 const Stack = createStackNavigator();
 
@@ -155,6 +155,8 @@ export default function App() {
                 <Stack.Screen name="Pond" component={Pond} />
                 <Stack.Screen name="FarmSetup" component={FarmSetup} />
                 <Stack.Screen name="Categories" component={CategoriesPage} />
+                <Stack.Screen name="AlertHistory" component={AlertHistory} />
+                
 
               </Stack.Navigator>
             </NavigationContainer>

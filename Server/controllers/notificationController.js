@@ -48,3 +48,24 @@ export const storeNotificationToken = async (req, res) => {
         res.status(500).json({ msg: 'An error occurred while storing the notification token' });
     }
 };
+
+
+export const getNotificationsByPond = (req, res) => {
+    const { pondId } = req.params; // Retrieve the pond ID from request parameters.
+
+    const query = `
+        SELECT notification_id, notification_title, notification_body, created_at
+        FROM notifications
+        WHERE pond_id = ?
+        ORDER BY created_at DESC
+    `;
+
+    db.query(query, [pondId], (err, results) => {
+        if (err) {
+            console.error('Error fetching notifications by pond ID:', err);
+            return res.status(500).json({ msg: 'Failed to fetch notifications' });
+        }
+
+        res.status(200).json(results);
+    });
+};

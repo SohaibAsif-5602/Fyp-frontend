@@ -207,34 +207,6 @@ export default function Analytics() {
   
   
 
-  const deletePond = async () => {
-    console.log('Deleting pond:', pondId);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.log('No token found. Redirecting to login.');
-        navigation.navigate('Login');
-        return;
-      }
-  
-      const response = await axios.delete(`${process.env.EXPO_PUBLIC_API_URL}/api/ponds/delete-pond/${pondId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (response.status === 200) {
-        console.log('Pond deleted successfully.');
-        
-        navigation.navigate('MainTabs'); 
-      } else {
-        console.error('Failed to delete the pond. Status:', response.status);
-      }
-    } catch (error) {
-      console.error('Error deleting pond:', error.message);
-    }
-  };
   
 
 
@@ -365,14 +337,7 @@ export default function Analytics() {
             Fish Health - <Text style={styles.fishHealthValue}>{fishHealth}%</Text> Okay
           </Text>
           
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlertHistory')}>
-            <Text style={styles.buttonText}>View Alerts History</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={deletePond}>
-            <Text style={styles.buttonText}>Delete Pond</Text>
-          </TouchableOpacity>
-        </View>
+        
       </ScrollView>
     </View>
   );

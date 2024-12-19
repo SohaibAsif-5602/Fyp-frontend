@@ -90,7 +90,7 @@ export const addPond = async (req, res) => {
             public_flag: true,
             field1: 'Temperature',
             field2: 'pH',
-            field3: 'Dissolved_oxygen',
+            field3: 'Turbidity',
         });
 
         channelId = channelResponse.data.id;
@@ -122,7 +122,7 @@ export const addPond = async (req, res) => {
         function insertFishData() {
             db.query(
                 'INSERT INTO Fishgroup (age, specie, imagelink,pond_name) VALUES (?, ?, ?,?)',
-                [fishAge, fishSpecies, 'default_image_link',channelName], // Replace with actual image link if available
+                [fishAge, fishSpecies, "https://res.cloudinary.com/dfegwo1lv/image/upload/v1734630806/images_1_bdx1zo.jpg",channelName], // Replace with actual image link if available
                 (error, fishResult) => {
                     if (error) {
                         console.error('Error inserting fish data into the database:', error);

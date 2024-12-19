@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+
 // Example API URL
 const API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/transactions`;
 
@@ -18,7 +19,7 @@ const Tran = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [activeTab, setActiveTab] = useState('income');
 
-const navigation = useNavigation();
+  const navigation = useNavigation();
 
   // Fetch transactions
   const fetchTransactions = async () => {
@@ -29,6 +30,7 @@ const navigation = useNavigation();
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(response.data);
+      console.log('Transactions:', response.data);
       filterTransactions(response.data, 'income'); // Filter income initially
     } catch (error) {
       console.error('Error fetching transactions:', error.message);
@@ -54,10 +56,9 @@ const navigation = useNavigation();
 
   // Render individual transaction item
   const renderItem = ({ item }) => (
-    console.log(item),
     <View style={styles.transactionCard}>
       <Text style={styles.transactionTitle}>
-        {item.transaction_details} [{item.pond_id}] ({item.category_name})
+        {item.transaction_details} [{item.pond_name}] ({item.category_name})
       </Text>
       <Text style={styles.transactionDate}>{formatDate(item.transaction_date)}</Text>
       <Text
@@ -76,22 +77,12 @@ const navigation = useNavigation();
       {/* Header Tabs */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => filterTransactions(transactions, 'income')}>
-          <Text
-            style={[
-              styles.headerText,
-              activeTab === 'income' && styles.activeTab,
-            ]}
-          >
+          <Text style={[styles.headerText, activeTab === 'income' && styles.activeTab]}>
             Income
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => filterTransactions(transactions, 'expense')}>
-          <Text
-            style={[
-              styles.headerText,
-              activeTab === 'expense' && styles.activeTab,
-            ]}
-          >
+          <Text style={[styles.headerText, activeTab === 'expense' && styles.activeTab]}>
             Expenses
           </Text>
         </TouchableOpacity>
@@ -102,6 +93,7 @@ const navigation = useNavigation();
         data={filteredTransactions}
         keyExtractor={(item) => item.transaction_id.toString()}
         renderItem={renderItem}
+        ListEmptyComponent={<Text style={styles.emptyMessage}>No transactions available</Text>}
       />
 
       {/* Add Income Button */}
@@ -122,7 +114,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     padding: 16,
     backgroundColor: '#0077BE',
     borderBottomLeftRadius: 40,
@@ -132,6 +124,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    marginHorizontal: 20,
   },
   activeTab: {
     textDecorationLine: 'underline',
@@ -139,16 +132,21 @@ const styles = StyleSheet.create({
   },
   transactionCard: {
     backgroundColor: '#fff',
-    marginHorizontal: 10,
-    marginVertical: 6,
-    padding: 14,
-    borderRadius: 10,
-    elevation: 2,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
   transactionTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    color: '#333',
   },
   transactionDate: {
     color: '#888',
@@ -177,6 +175,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  emptyMessage: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#888',
+    fontSize: 16,
   },
 });
 

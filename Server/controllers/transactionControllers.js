@@ -66,34 +66,36 @@ export const updateTransaction = async (req, res) => {
 
 
 export const getTransactions = async (req, res) => {
-    const userId = req.userId; 
-  
-    try {
+  const userId = req.userId; 
+
+  try {
       const sql = `
-        SELECT 
-          T.transaction_id,
-          T.transaction_type,
-          T.amount,
-          T.transaction_date,
-          T.receipt_no,
-          T.pond_id,
-          T.transaction_details,
-          T.category_id,
-          C.name AS category_name,
-          C.type AS category_type
-        FROM Transactions T
-        LEFT JOIN Categories C ON T.category_id = C.id
-        WHERE T.user_id = ?
+          SELECT 
+              T.transaction_id,
+              T.transaction_type,
+              T.amount,
+              T.transaction_date,
+              T.receipt_no,
+              P.pond_name,  -- Add pond name here
+              T.pond_id,
+              T.transaction_details,
+              T.category_id,
+              C.name AS category_name,
+              C.type AS category_type
+          FROM Transactions T
+          LEFT JOIN Categories C ON T.category_id = C.id
+          LEFT JOIN Pond P ON T.pond_id = P.pond_id  -- Join Pond table on pond_id
+          WHERE T.user_id = ?
       `;
       const [rows] = await db.execute(sql, [userId]);
-  
+
       res.status(200).json(rows);
-    } catch (error) {
+  } catch (error) {
       console.error('Error fetching transactions:', error);
       res.status(500).json({ message: 'Error fetching transactions', error: error.message });
-    }
-  };
-    
+  }
+};
+  
 
 
   export const getCategories = async (req, res) => {

@@ -1,272 +1,142 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import moment from 'moment';
+import { useRoute } from '@react-navigation/native';
 
-const temperatureIcon = require('../assets/high-temperature.png');
-const lowtemperatureIcon = require('../assets/low-temperature.png');
-const phIcon = require('../assets/high-ph.png');
-const lowphIcon = require('../assets/ph-low.png');
-const dissolvedOxygenIcon = require('../assets/oxygen-tank.png');
-const lowdissolvedOxygenIcon = require('../assets/medical.png');
+const AlertHistory = () => {
+  const route = useRoute();
+  const { pondId } = route.params;
+  console.log(pondId);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-// Custom Checkbox component
-const Checkbox = ({ value, onValueChange, label }) => (
-  <TouchableOpacity style={styles.checkboxContainer} onPress={() => onValueChange(!value)}>
-    <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-      {value && <Text style={styles.checkmark}>✓</Text>}
-    </View>
-    <Text style={styles.checkboxLabel}>{label}</Text>
-  </TouchableOpacity>
-);
+  const fetchNotifications = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      console.log(token);
+      if (!token) {
+        Alert.alert('Error', 'User not authenticated. Please log in.');
+        return;
+      }
 
-export default function AlertHistory() {
-  const [highestTemperature, setHighestTemperature] = useState(null);
-  const [lowestTemperature, setLowestTemperature] = useState(null);
-  const [highestPh, setHighestPh] = useState(null);
-  const [lowestPh, setLowestPh] = useState(null);
-  const [highestDissolvedOxygen, setHighestDissolvedOxygen] = useState(null);
-  const [lowestDissolvedOxygen, setLowestDissolvedOxygen] = useState(null);
-  
-  const [showHighTemp, setShowHighTemp] = useState(true);
-  const [showLowTemp, setShowLowTemp] = useState(true);
-  const [showHighPh, setShowHighPh] = useState(true);
-  const [showLowPh, setShowLowPh] = useState(true);
-  const [showHighDO, setShowHighDO] = useState(false);
-  const [showLowDO, setShowLowDO] = useState(true);
-  const [showAll, setShowAll] = useState(true);
+      const response = await axios.get(`http://192.168.100.147:8080/api/notifications/get-notifications-by-pond/${pondId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
 
-  // State to toggle dropdown visibility
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+      const fetchedNotifications = response.data.map((notification) => ({
+        id: notification.notification_id.toString(),
+        title: notification.notification_title,
+        body: notification.notification_body,
+        time: notification.created_at,
+        icon: 'notifications-outline',
+      }));
+
+      setNotifications(fetchedNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      Alert.alert('Error', 'Failed to fetch notifications');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    fetchData();
+    fetchNotifications();
   }, []);
 
-  const fetchData = () => {
-    const channelID = '2592426';
-    const apiKey = '45H5S1N645GKKUCB';
-    const url = `https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${apiKey}&results=100`;
-
-    axios.get(url)
-      .then(response => {
-        const feeds = response.data.feeds;
-
-        const temperatures = feeds.map(feed => ({
-          date: feed.created_at.split('T')[0],
-          value: parseFloat(feed.field1)
-        }));
-        const phValues = feeds.map(feed => ({
-          date: feed.created_at.split('T')[0],
-          value: parseFloat(feed.field2)
-        }));
-        const dissolvedOxygenValues = feeds.map(feed => ({
-          date: feed.created_at.split('T')[0],
-          value: parseFloat(feed.field3)
-        }));
-
-        const maxTemperature = temperatures.reduce((max, item) => (item.value > max.value ? item : max), temperatures[0]);
-        const minTemperature = temperatures.reduce((min, item) => (item.value < min.value ? item : min), temperatures[0]);
-
-        const maxPh = phValues.reduce((max, item) => (item.value > max.value ? item : max), phValues[0]);
-        const minPh = phValues.reduce((min, item) => (item.value < min.value ? item : min), phValues[0]);
-
-        const maxDissolvedOxygen = dissolvedOxygenValues.reduce((max, item) => (item.value > max.value ? item : max), dissolvedOxygenValues[0]);
-        const minDissolvedOxygen = dissolvedOxygenValues.reduce((min, item) => (item.value < min.value ? item : min), dissolvedOxygenValues[0]);
-
-        setHighestTemperature(maxTemperature);
-        setLowestTemperature(minTemperature);
-        setHighestPh(maxPh);
-        setLowestPh(minPh);
-        setHighestDissolvedOxygen(maxDissolvedOxygen);
-        setLowestDissolvedOxygen(minDissolvedOxygen);
-      })
-      .catch(error => {
-        console.error("Error fetching data from ThingSpeak:", error);
-      });
-  };
-
-  const handleAllChange = (value) => {
-    setShowAll(value);
-    setShowHighTemp(value);
-    setShowLowTemp(value);
-    setShowHighPh(value);
-    setShowLowPh(value);
-    setShowHighDO(value);
-    setShowLowDO(value);
-  };
-
-  const handleSave = () => {
-    console.log('Save button pressed');
-  };
-
-  const renderAlertItem = (title, data, icon, show) => {
-    if (!show || !data) return null;
-    return (
-      <View style={styles.alertContainer}>
-        <Text style={styles.alertHeader}>{title}:</Text>
-        <View style={styles.alertItem}>
-          <Image source={icon} style={styles.icon} />
-          <Text style={styles.alertText}>{data.date}: {data.value}</Text>
-        </View>
+  const renderItem = ({ item }) => (
+    <View style={styles.notificationCard}>
+      <View style={styles.iconContainer}>
+        <Icon name={item.icon} size={30} color="#4F8EF7" />
       </View>
-    );
-  };
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.body}>{item.body}</Text>
+        <Text style={styles.time}>{moment(item.time).fromNow()}</Text>
+      </View>
+    </View>
+  );
 
   return (
-    <ScrollView style={styles.container}>
-
-      {/* Dropdown Section */}
-      <TouchableOpacity style={styles.dropdownButton} onPress={() => setDropdownOpen(!dropdownOpen)}>
-        <Text style={styles.dropdownButtonText}>Filter</Text>
-      </TouchableOpacity>
-
-      {dropdownOpen && (
-        <View style={styles.checkboxList}>
-          <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>Temperature</Text>
-            <View style={styles.checkboxGroup}>
-              <Checkbox value={showHighTemp} onValueChange={setShowHighTemp} label="High" />
-              <Checkbox value={showLowTemp} onValueChange={setShowLowTemp} label="Low" />
-            </View>
-          </View>
-          <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>pH</Text>
-            <View style={styles.checkboxGroup}>
-              <Checkbox value={showHighPh} onValueChange={setShowHighPh} label="High" />
-              <Checkbox value={showLowPh} onValueChange={setShowLowPh} label="Low" />
-            </View>
-          </View>
-          <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>DO</Text>
-            <View style={styles.checkboxGroup}>
-              <Checkbox value={showHighDO} onValueChange={setShowHighDO} label="High" />
-              <Checkbox value={showLowDO} onValueChange={setShowLowDO} label="Low" />
-            </View>
-          </View>
-          <View style={styles.checkboxRow}>
-            <Text style={styles.parameterLabel}>All</Text>
-            <View style={styles.checkboxGroup}>
-              <Checkbox value={showAll} onValueChange={handleAllChange} label="" />
-            </View>
-          </View>
-        </View>
+    <View style={styles.container}>
+      {loading ? (
+        <ActivityIndicator size="large" color="#4F8EF7" />
+      ) : (
+        <FlatList
+          data={notifications}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                fetchNotifications();
+              }}
+            />
+          }
+          ListEmptyComponent={<Text style={styles.emptyMessage}>No notifications found.</Text>}
+        />
       )}
-
-      {renderAlertItem("Highest Temperature", highestTemperature, temperatureIcon, showHighTemp)}
-      {renderAlertItem("Lowest Temperature", lowestTemperature, lowtemperatureIcon, showLowTemp)}
-      {renderAlertItem("Highest pH", highestPh, phIcon, showHighPh)}
-      {renderAlertItem("Lowest pH", lowestPh, lowphIcon, showLowPh)}
-      {renderAlertItem("Highest Dissolved Oxygen", highestDissolvedOxygen, dissolvedOxygenIcon, showHighDO)}
-      {renderAlertItem("Lowest Dissolved Oxygen", lowestDissolvedOxygen, lowdissolvedOxygenIcon, showLowDO)}
-    </ScrollView>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     flex: 1,
-    backgroundColor: '#f2f2f2',
-    padding: 20,
-  },
-  pageHeader: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 15,
-  },
-  dropdownButton: {
-    backgroundColor: 'green',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-    width:100
-  },
-  dropdownButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  checkboxList: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
     padding: 10,
-    marginBottom: 20,
   },
-  checkboxRow: {
+  notificationCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 8,
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  parameterLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  checkboxGroup: {
-    flexDirection: 'row',
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#ccc',
+  iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 15,
   },
-  checkboxChecked: {
-    backgroundColor: '#007BFF',
-    borderColor: '#007BFF',
+  textContainer: {
+    flex: 1,
   },
-  checkmark: {
-    color: 'white',
-    fontSize: 18,
-  },
-  checkboxLabel: {
-    marginLeft: 8,
+  title: {
     fontSize: 16,
-  },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 5,
   },
-  alertContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
+  body: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 5,
   },
-  alertHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+  time: {
+    fontSize: 12,
+    color: '#888',
   },
-  alertItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
-  },
-  alertText: {
+  emptyMessage: {
+    textAlign: 'center',
     fontSize: 16,
+    color: '#aaa',
+    marginTop: 20,
   },
 });
+
+export default AlertHistory;

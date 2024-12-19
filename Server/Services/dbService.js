@@ -84,68 +84,83 @@ export const insertNotificationToken = (userId, notificationToken) => {
 
 
 export async function deleteRecords(channel_id, fish_id, pondId, res) {
-    const dbQuery = (query, params) =>
-        new Promise((resolve, reject) => {
-            db.query(query, params, (err, results) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(results);
-            });
-        });
-
-    try {
-        // Begin transaction
-        await new Promise((resolve, reject) => {
-            db.beginTransaction((err) => {
-                if (err) return reject(err);
-                resolve();
-            });
-        });
-
-        // Delete the pond
-        await dbQuery('DELETE FROM Pond WHERE pond_id = ?', [pondId]);
-
-        // Delete alerts for the pond's channel
-        await dbQuery('DELETE FROM Alert WHERE channel_id = ?', [channel_id]);
-
-        // Delete the IoT channel data
-        await dbQuery('DELETE FROM Iot WHERE channel_id = ?', [channel_id]);
-
-        // Delete the fish data
-        await dbQuery('DELETE FROM Fishgroup WHERE id = ?', [fish_id]);
-
-        
-        const thingSpeakResponse = await axios.delete(
-            `https://api.thingspeak.com/channels/${channel_id}`,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                params: {
-                    api_key: process.env.THINGSPEAK_API_KEY,
-                },
-            }
-        );
-
-        if (thingSpeakResponse.status !== 200) {
-            throw new Error('Failed to delete the ThingSpeak channel.');
+  const dbQuery = (query, params, connection) =>
+    new Promise((resolve, reject) => {
+      connection.query(query, params, (err, results) => {
+        if (err) {
+          return reject(err);
         }
+        resolve(results);
+      });
+    });
 
-        // Commit the transaction
-        await new Promise((resolve, reject) => {
-            db.commit((err) => {
-                if (err) return reject(err);
-                resolve();
-            });
-        });
+  try {
+    const connection = await new Promise((resolve, reject) => {
+      db.getConnection((err, conn) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(conn);
+      });
+    });
 
-        res.status(200).json({ msg: "Pond and related data deleted successfully, including ThingSpeak channel." });
-    } catch (error) {
-        // Rollback the transaction in case of any error
-        db.rollback(() => {
-            console.error('Transaction failed:', error);
-            res.status(500).json({ msg: "Error deleting records.", error: error.message });
-        });
+    // Begin transaction
+    await new Promise((resolve, reject) => {
+      connection.beginTransaction((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+
+    // Delete the pond
+    await dbQuery('DELETE FROM Pond WHERE pond_id = ?', [pondId], connection);
+
+    // Delete alerts for the pond's channel
+    await dbQuery('DELETE FROM Alert WHERE channel_id = ?', [channel_id], connection);
+
+    // Delete the IoT channel data
+    await dbQuery('DELETE FROM Iot WHERE channel_id = ?', [channel_id], connection);
+
+    // Delete the fish data
+    await dbQuery('DELETE FROM Fishgroup WHERE id = ?', [fish_id], connection);
+
+    // Delete ThingSpeak channel
+    const thingSpeakResponse = await axios.delete(
+      `https://api.thingspeak.com/channels/${channel_id}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {
+          api_key: process.env.THINGSPEAK_API_KEY,
+        },
+      }
+    );
+
+    if (thingSpeakResponse.status !== 200) {
+      throw new Error('Failed to delete the ThingSpeak channel.');
     }
+
+    // Commit transaction
+    await new Promise((resolve, reject) => {
+      connection.commit((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+
+    connection.release(); // Release the connection back to the pool
+
+    res.status(200).json({ msg: "Pond and related data deleted successfully, including ThingSpeak channel." });
+  } catch (error) {
+    // Rollback transaction in case of any error
+    if (connection) {
+      connection.rollback(() => {
+        console.error('Transaction failed:', error);
+        res.status(500).json({ msg: "Error deleting records.", error: error.message });
+      });
+    } else {
+      res.status(500).json({ msg: "Error connecting to the database.", error: error.message });
+    }
+  }
 }
