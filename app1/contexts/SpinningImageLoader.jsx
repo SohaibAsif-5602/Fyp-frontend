@@ -8,7 +8,7 @@ const SpinningImageLoader = ({ source, size = 100, duration = 2000 }) => {
     // Animation: Rotate the image
     const spinAnimation = Animated.loop(
       Animated.timing(spinValue, {
-        toValue: 1,
+        toValue: 2.5,
         duration,
         easing: Easing.linear,
         useNativeDriver: true,
@@ -23,7 +23,7 @@ const SpinningImageLoader = ({ source, size = 100, duration = 2000 }) => {
   // Map the spinValue to a rotation value
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+    outputRange: ['360deg', '0deg'],
   });
 
   return (

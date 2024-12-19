@@ -119,6 +119,7 @@ const PondList = () => {
             <Text style={styles.city}>{pond.pond_name}</Text>
             <Text style={styles.fish}>{pond.pond_loc}</Text>
             <Text style={styles.fish}>{pond.specie}</Text>
+            
           </View>
         </TouchableOpacity>
         <TouchableOpacity

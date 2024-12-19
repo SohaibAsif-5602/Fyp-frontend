@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   fishImage: {
     width: width * 0.4,
-    height: width * 0.4,
+    height: width * 0.8,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
   },
