@@ -7,6 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import CONFIG from '../config';
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -128,13 +130,21 @@ const LoginScreen = () => {
     }
 
     try {
-      const response = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/login', {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        CONFIG.AUTH_URL + '/login',
+        JSON.stringify({ email, password }), // Stringify the data here
+        {
+          headers: {
+            'Content-Type': 'application/json', // Ensure proper content type is set
+          },
+        }
+      );
+
 
       if (response.status === 200) {
         await AsyncStorage.setItem('token', response.data.token);
+        await AsyncStorage.setItem('role', response.data.role_name);
+        
         setAlertMessage("Login successful!");
 
         // Get the latest push token
@@ -144,7 +154,7 @@ const LoginScreen = () => {
           // Store the push token in the database
           const authToken = response.data.token;
           await axios.post(
-            process.env.EXPO_PUBLIC_API_URL + '/api/notifications/store-notification-token',
+            CONFIG.AUTH_URL + '/store-notification-token',
             { notification_token: token },
             {
               headers: {

@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import './db.js'; 
 import db from './db.js';
+
 import authRoutes from './routes/authRoutes.js';
 import pondRoutes from './routes/pondRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -52,6 +53,6 @@ app.get('/', (req, res) => {
     console.log("Server Running");
 });
 
-app.listen(8080, '0.0.0.0', () => {
-    console.log("Server Running on port 8080");
+app.listen(8000, '0.0.0.0', () => {
+    console.log("Server Running on port",8000);
 });

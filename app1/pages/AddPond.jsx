@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,131 +6,188 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Image,
   ScrollView,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Import the Picker
+import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CONFIG from '../config';
+import { useEffect } from 'react';
 
-const AddPond = ({ navigation }) => {
+
+const AddPond = ({ navigation, route }) => {
+  
+  const [farms, setFarms] = useState([]);
+  const [selectedFarmId, setSelectedFarmId] = useState('');
+  const farmIdFromRoute = route?.params?.farmId;
+  
   const [pondName, setPondName] = useState('');
-  const [location, setLocation] = useState('');
-  const [fishSpecies, setFishSpecies] = useState('');
-  const [fishAge, setFishAge] = useState('');
+  const [type, setType] = useState('');
+  const [length, setLength] = useState('');
+  const [width, setWidth] = useState('');
+  const [depth, setDepth] = useState('');
 
-  const handleSubmit = async () => {
-    if (pondName && location && fishSpecies && fishAge) {
-      if (parseInt(fishAge) <= 6) {
+    useEffect(() => {
+      const fetchFarms = async () => {
         try {
           const token = await AsyncStorage.getItem('token');
           if (!token) {
-            console.log('No token found. Redirecting to login.');
             navigation.navigate('Login');
             return;
           }
-   
-            const response = await fetch(process.env.EXPO_PUBLIC_API_URL+'/api/ponds/add-pond', {
-            method: 'POST',
+    
+          const response = await fetch(`${CONFIG.OWNER_URL}/get-farm-name-and-id`, {
+            method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              channelName: pondName,
-              location: location,
-              fishSpecies: fishSpecies,
-              fishAge: fishAge,
-            }), // Send all required data to the backend
           });
-  
+    
           const data = await response.json();
-  
+    
           if (response.ok) {
-            // Handle successful response
-            Alert.alert(`'Pond Added', ${pondName} pond added successfully!`);
-            setPondName('');
-            setLocation('');
-            setFishSpecies('');
-            setFishAge('');
-            navigation.goBack();
+            setFarms(data.farms);
+            if (farmIdFromRoute) {
+              setSelectedFarmId(farmIdFromRoute); // Just pre-select, don’t filter the list
+            }
           } else {
-            // Handle error from the server
-            Alert.alert('Error', data.error || 'Failed to create a channel. Please try again.');
+            Alert.alert('Error', data.error || 'Failed to fetch farms');
           }
         } catch (error) {
-          console.error('Error creating channel:', error);
-          Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+          console.error(error);
+          Alert.alert('Error', 'Failed to load farms.');
         }
-      } else {
-        Alert.alert('Error', 'Fish age cannot be more than 6 months.');
-      }
-    } else {
-      Alert.alert('Error', 'Please fill all fields');
-    }
-  };
+      };
+    
+      fetchFarms();
+    }, [farmIdFromRoute]);
+    
+  
+  
   
 
-  return (
-    
-    <ScrollView contentContainerStyle={[styles.container]}>
-     
 
-      <Text style={[styles.label]}>Pond Name</Text>
+  const handleSubmit = async () => {
+    if (!pondName || !type || !length || !width || !depth) {
+      Alert.alert('Error', 'Please fill all fields');
+      return;
+    }
+    if (!selectedFarmId) {
+      Alert.alert('Error', 'Please select a farm');
+      return;
+    }
+    
+    if (!['Clay', 'Concrete'].includes(type)) {
+      Alert.alert('Error', "Invalid pond type. Choose 'Clay' or 'Concrete'.");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
+      }
+
+      const response = await fetch(`${CONFIG.OWNER_URL}/add-pond/${selectedFarmId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: pondName,
+          type,
+          length,
+          width,
+          depth,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'Pond added successfully!');
+        setPondName('');
+        setType('');
+        setLength('');
+        setWidth('');
+        setDepth('');
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', data.error || 'Failed to add pond');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'An unexpected error occurred.');
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+<Text style={styles.label}>Select Farm</Text>
+<View style={styles.pickerContainer}>
+  <Picker
+    selectedValue={selectedFarmId}
+    onValueChange={(value) => setSelectedFarmId(value)}
+    style={styles.picker}
+  >
+    <Picker.Item label="Select a Farm" value="" />
+    {farms.map((farm) => (
+      <Picker.Item key={farm.id} label={farm.name} value={farm.id} />
+    ))}
+  </Picker>
+</View>
+
+      <Text style={styles.label}>Pond Name</Text>
       <TextInput
-        style={[styles.input]}
+        style={styles.input}
         value={pondName}
         onChangeText={setPondName}
         placeholder="Enter Pond Name"
       />
 
-      <Text style={[styles.label]}>Location</Text>
-      <TextInput
-        style={[styles.input]}
-        value={location}
-        onChangeText={setLocation}
-        placeholder="Enter Pond Location"
-      />
-
-      <Text style={[styles.label]}>Fish Species</Text>
-      <View style={[styles.pickerContainer]}>
+      <Text style={styles.label}>Pond Type</Text>
+      <View style={styles.pickerContainer}>
         <Picker
-          selectedValue={fishSpecies}
-          onValueChange={(itemValue) => setFishSpecies(itemValue)}
-          style={[styles.picker]}
+          selectedValue={type}
+          onValueChange={(value) => setType(value)}
+          style={styles.picker}
         >
-          <Picker.Item label="Select Fish Species" value="" />
-          <Picker.Item label="Catla" value="katla" />
-          <Picker.Item label="Silver Carp" value="silverCup" />
-          <Picker.Item label="Pangas" value="pangas" />
-          <Picker.Item label="Rahu" value="pui" />
-          <Picker.Item label="Koi" value="koi" />
-          <Picker.Item label="Tilapia" value="tilapia" />
-          <Picker.Item label="Mrigal" value="magur" />
-          <Picker.Item label="Sing" value="sing" />
-          <Picker.Item label="Shrimp" value="shrimp" />
-          <Picker.Item label="Carp" value="karpio" /> 
-          <Picker.Item label= "Prawn" value="prawn" />
+          <Picker.Item label="Select Pond Type" value="" />
+          <Picker.Item label="Clay" value="Clay" />
+          <Picker.Item label="Concrete" value="Concrete" />
         </Picker>
       </View>
 
-      <Text style={[styles.label]}>Fish Age (in months)</Text>
+      <Text style={styles.label}>Length (meters)</Text>
       <TextInput
-        style={[styles.input]}
-        value={fishAge}
-        onChangeText={(text) => {
-          // Allow only numbers less than or equal to 6
-          if (/^\d*$/.test(text) && (text === '' || parseInt(text) <= 6)) {
-            setFishAge(text);
-          } else if (parseInt(text) > 6) {
-            Alert.alert('Error', 'Fish age cannot be more than 6 months.');
-          }
-        }}
-        placeholder="Enter Fish Age"
+        style={styles.input}
+        value={length}
+        onChangeText={setLength}
+        placeholder="Enter Length"
         keyboardType="numeric"
       />
 
-      <TouchableOpacity style={[styles.addButton]} onPress={handleSubmit}>
-        <Text style={[styles.addText]}>Add Pond</Text>
+      <Text style={styles.label}>Width (meters)</Text>
+      <TextInput
+        style={styles.input}
+        value={width}
+        onChangeText={setWidth}
+        placeholder="Enter Width"
+        keyboardType="numeric"
+      />
+
+      <Text style={styles.label}>Depth (meters)</Text>
+      <TextInput
+        style={styles.input}
+        value={depth}
+        onChangeText={setDepth}
+        placeholder="Enter Depth"
+        keyboardType="numeric"
+      />
+
+      <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
+        <Text style={styles.addText}>Add Pond</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -141,14 +198,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 40,
     backgroundColor: '#f9f9f9',
-  },
-  headerImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 20,
-    marginTop: 20,
-    resizeMode: 'cover',
   },
   label: {
     fontSize: 18,
@@ -163,7 +212,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 16,
     backgroundColor: '#fff',
-    elevation: 2, // Adding shadow for a more professional look
+    elevation: 2,
     color: '#000',
   },
   pickerContainer: {
@@ -174,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#fff',
     justifyContent: 'center',
-    elevation: 2, // Adding shadow for a more professional look
+    elevation: 2,
   },
   picker: {
     width: '100%',
@@ -184,9 +233,9 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#0077BE',
     paddingVertical: 15,
-    alignSelf:'center',
+    alignSelf: 'center',
     borderRadius: 32,
-    width:105,
+    width: 140,
     alignItems: 'center',
     marginTop: 20,
   },
@@ -197,4 +246,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddPond;
+export default AddPond;

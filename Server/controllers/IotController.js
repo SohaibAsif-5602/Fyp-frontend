@@ -49,10 +49,16 @@ export const submit_user_info = (req, res) => {
 
 
 export const sendAlert = async (req, res) => {
+
+
+  const iid = req.query.var1;
+    const password = req.query.var2;
+    const sensorValue = req.query.var3;
+    const sensorType = req.query.var4;
+    const alertLevel = req.query.var5;
     console.log("sendAlert");
     console.log(req.body);
 
-    const { iid, password, sensorValue, sensorType, alertLevel } = req.body;
     
     // Validate the request body
     if (!iid || !password || !sensorValue || !sensorType || !alertLevel) {

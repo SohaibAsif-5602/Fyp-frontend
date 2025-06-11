@@ -1,9 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios'; // Import axios for API calls
-import moment from 'moment'; // To format the timestamp
+import axios from 'axios';
+import moment from 'moment';
+import CONFIG from '../config';
+
+const getIconName = (type) => {
+  switch (type) {
+    case 'Message':
+      return 'chatbox-ellipses-outline';
+    case 'Inventory':
+      return 'cube-outline';
+    case 'System':
+      return 'cog-outline';
+    case 'Task':
+      return 'checkmark-done-outline';
+    case 'Alert':
+      return 'alert-circle-outline';
+    default:
+      return 'notifications-outline';
+  }
+};
 
 const NotificationScreen = () => {
   const [notifications, setNotifications] = useState([]);
@@ -11,30 +29,27 @@ const NotificationScreen = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        // Get the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
         if (!token) {
           Alert.alert('Error', 'User not authenticated. Please log in.');
           return;
         }
 
-        // Fetch notifications from the server
-        const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/notifications', {
+        const response = await axios.get(CONFIG.OWNER_URL + '/get-notifications', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        // Assuming the API returns an array of notifications
         const fetchedNotifications = response.data.map((notification) => ({
-          id: notification.notification_id.toString(),
-          title: notification.notification_title,
-          body: notification.notification_body,
-          time: notification.created_at,
-          icon: 'notifications-outline', // Set a default icon for notifications
+          id: notification.id.toString(),
+          body: notification.message,
+          type: notification.notification_type,
+          isRead: notification.is_read === 1,
+          icon: getIconName(notification.notification_type),
+          time: notification.created_at || new Date().toISOString(),
         }));
 
-        // Update state with fetched notifications
         setNotifications(fetchedNotifications);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -45,17 +60,41 @@ const NotificationScreen = () => {
     fetchNotifications();
   }, []);
 
-  // Function to render each notification item
+  const handleDelete = async (id) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Error', 'User not authenticated.');
+        return;
+      }
+
+      await axios.delete(`${CONFIG.OWNER_URL}/delete-notification/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Remove from local state
+      setNotifications(notifications.filter((n) => n.id !== id));
+    } catch (error) {
+      console.error('Delete failed:', error);
+      Alert.alert('Error', 'Failed to delete notification');
+    }
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.notificationCard}>
+    <View style={[styles.notificationCard, !item.isRead && styles.unreadNotification]}>
       <View style={styles.iconContainer}>
         <Icon name={item.icon} size={30} color="#4F8EF7" />
       </View>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.title}>{item.type}</Text>
         <Text style={styles.body}>{item.body}</Text>
         <Text style={styles.time}>{moment(item.time).fromNow()}</Text>
       </View>
+      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+        <Icon name="trash-outline" size={24} color="#ff3b30" />
+      </TouchableOpacity>
     </View>
   );
 
@@ -78,6 +117,7 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 15,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -87,6 +127,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 3,
+  },
+  unreadNotification: {
+    backgroundColor: '#e6f0ff',
   },
   iconContainer: {
     justifyContent: 'center',
@@ -109,6 +152,10 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: '#888',
+  },
+  deleteButton: {
+    marginLeft: 10,
+    padding: 4,
   },
 });
 

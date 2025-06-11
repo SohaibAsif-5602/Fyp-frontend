@@ -3,12 +3,23 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import additional icon set
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation} from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react"; // Import useState and useEffect
 
 export default function Dashboard() {
   const navigation = useNavigation();
+  const [role, setRole] = useState('');  // Handler function for card clicks
 
-  // Handler function for card clicks
+  useEffect(() => {
+    const fetchRole = async () => {
+      const storedRole = await AsyncStorage.getItem('role');
+      setRole(storedRole);
+    };
+    fetchRole();
+  }, []);
+  
+
   const handleCardPress = (title) => {
     Alert.alert(`You clicked on ${title}`);
     // You can replace the Alert with navigation code if using React Navigation
@@ -17,37 +28,70 @@ export default function Dashboard() {
 
   return (
     <View style={styles.container}>
+      
+      {role == "owner" && (
+        <View style={styles.row}>
+          <Card
+            title="Farms"
+            iconSet={MaterialCommunityIcons}
+            iconName="barn"
+            onPress={() => navigation.navigate('Farms')}
+          />
+          <Card
+            title="Workers"
+            iconSet={MaterialCommunityIcons}
+            iconName="account-group"
+            onPress={() => navigation.navigate('Workers')}
+          />
+        </View>
+      )}
       <View style={styles.row}>
         <Card
-
           title="Ponds"
           iconSet={MaterialCommunityIcons}
-          iconName="water"
+          iconName="fish"
           onPress={() => navigation.navigate('Pond')}
         />
         <Card
-          title="Transactions"
-          iconSet={FontAwesome}
-          iconName="money"
-          onPress={() => navigation.navigate('Transaction')}
+          title="Devices"
+          iconSet={MaterialCommunityIcons} // Changed icon set
+          iconName="devices" // Changed icon name
+          onPress={() => navigation.navigate('Devices')}
+        />
+      </View>
+
+      <View style={styles.row}>
+        <Card
+          title="Tasks"
+          iconSet={MaterialCommunityIcons}
+          iconName="clipboard-check"
+          onPress={() => navigation.navigate('Tasks')}
+        />
+        <Card
+          title="Fish Stock"
+          iconSet={MaterialCommunityIcons}
+          iconName="fishbowl"
+          onPress={() => navigation.navigate('FishStock')}
         />
       </View>
    
-      <View style={styles.row}>
-        <Card
-          title="Farm Setup"
+     {role == "owner" && (
+       <View style={styles.row}>
+         <Card
+           title="Farm Setup"
+           iconSet={MaterialCommunityIcons}
+           iconName="tractor"
+           onPress={() => navigation.navigate('FarmSetup')}
+         />
+         <Card
+           title="Reports"
+           iconSet={FontAwesome}
+           iconName="bar-chart"
+           onPress={() => handleCardPress("Reports")}
+         />
+       </View>
+     )}
 
-          iconSet={FontAwesome}
-          iconName="gear"
-          onPress={() => navigation.navigate('FarmSetup')}
-        />
-        <Card
-          title="Reports"
-          iconSet={FontAwesome}
-          iconName="line-chart"
-          onPress={() => handleCardPress("Reports")}
-        />
-      </View>
     </View>
   );
 }
@@ -66,6 +110,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
 
     padding: 20,
+    paddingTop: 40
   },
   row: {
     flexDirection: "row",

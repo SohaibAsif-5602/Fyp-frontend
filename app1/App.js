@@ -31,6 +31,14 @@ import Pond from './pages/ponds';
 import FarmSetup from './pages/farmSetup';
 import CategoriesPage from './pages/categories';
 import AlertHistory from './pages/alerthistory';
+import Farms from './pages/farm';
+import EditFarm from './pages/EditFarm';
+import AddFarm from './pages/AddFarm';
+import Workers from './pages/Workers';
+import TasksPage from './pages/TasksPage';
+import FishStockPage from './pages/FishStockPage';
+import Devices from './pages/Devices'
+
 
 const Stack = createStackNavigator();
 
@@ -156,6 +164,13 @@ export default function App() {
                 <Stack.Screen name="FarmSetup" component={FarmSetup} />
                 <Stack.Screen name="Categories" component={CategoriesPage} />
                 <Stack.Screen name="AlertHistory" component={AlertHistory} />
+                <Stack.Screen name="Farms" component={Farms} />
+                <Stack.Screen name="EditFarm" component={EditFarm} />
+                <Stack.Screen name="AddFarm" component={AddFarm} />
+                <Stack.Screen name="Workers" component={Workers} />
+                <Stack.Screen name="Tasks" component={TasksPage} />
+                <Stack.Screen name="FishStock" component={FishStockPage} />
+                <Stack.Screen name="Devices" component={Devices} />
                 
 
               </Stack.Navigator>

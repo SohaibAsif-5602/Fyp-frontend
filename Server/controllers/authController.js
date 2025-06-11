@@ -35,7 +35,7 @@ export const signup = (req, res) => {
 
 export const login = (req, res) => {
     const { email, password } = req.body;
-
+    console.log(email, password);
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, result) => {
         if (err) return res.status(500).json("SQL Server error");
         if (result.length === 0) return res.status(400).json("User not found");

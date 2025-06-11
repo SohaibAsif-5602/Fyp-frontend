@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
+import CONFIG from '../config';
 
 const CodeVerificationScreen = ({ route, navigation }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
-  const { email, password, username } = route.params;
+  const { email, password, username,role } = route.params;
 
   const handleVerifyCode = async () => {
     const verificationCode = code.join('');
@@ -14,21 +15,19 @@ const CodeVerificationScreen = ({ route, navigation }) => {
     }
 
     try {
-      const verifyResponse = await fetch(process.env.EXPO_PUBLIC_API_URL + '/api/auth/verifyCode', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, code: verificationCode }),
+      const verifyResponse = await axios.post(CONFIG.AUTH_URL + '/verify-otp', {
+        email: email,
+        code: verificationCode,
       });
 
       const verifyData = await verifyResponse.json();
 
-      if (verifyResponse.ok) {
-        const signupResponse = await axios.post(process.env.EXPO_PUBLIC_API_URL + '/api/auth/signup', {
+      if (verifyResponse.status === 200) {
+        const signupResponse = await axios.post(CONFIG.AUTH_URL + '/signup', {
           email: email,
           password: password,
           username: username,
+          role:role
         });
 
         if (signupResponse.status === 201) {

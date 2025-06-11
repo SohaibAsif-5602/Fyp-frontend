@@ -5,13 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import ProfileImage from '../assets/profile.jpeg';
 import axios from 'axios'; // Import axios for API calls
-
+import CONFIG from '../config'; // Import your configuration file
 const Setting = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState({
-    username: '',
+    user_name: '',
     email: '',
-    imagelink: '',
+    image: '',
     D_O_B: '',
     contact_on: '',
     gender: '',
@@ -25,9 +25,9 @@ const Setting = () => {
         return;
       }
 
-      const response = await axios.get(process.env.EXPO_PUBLIC_API_URL + '/api/users', {
+      const response = await axios.get(CONFIG.AUTH_URL + '/getuser', {
         headers: {
-          Authorization:`Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -64,35 +64,34 @@ const Setting = () => {
       <View style={styles.profileContainer}>
         <Image
           source={
-            userData.imagelink && userData.imagelink.startsWith('http')
-              ? { uri: userData.imagelink }
+            userData.image && userData.image.startsWith('http')
+              ? { uri: userData.image }
               : require('../assets/profile.jpeg')
           }
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>{userData.username || 'N/A'}</Text>
+        <Text style={styles.profileName}>{userData.user_name || 'N/A'}</Text>
         <Text style={styles.profileEmail}>{userData.email || 'N/A'}</Text>
-        
       </View>
 
       {/* Profile Options */}
       <View style={styles.optionContainer}>
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.option} onPress={() => {EditNav();}}>
-          <Icon name="trash-outline" size={24} color="#000" />
+        <TouchableOpacity style={styles.option} onPress={() => { EditNav(); }}>
+          <Icon name="person-outline" size={24} color="#000" />
           <Text style={styles.optionText}>View Profile</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option} onPress={() => {    navigation.navigate('fishguide');
-}}>
-          <Icon name="time-outline" size={24} color="#000" />
+        <TouchableOpacity style={styles.option} onPress={() => { navigation.navigate('fishguide'); }}>
+          <Icon name="book-outline" size={24} color="#000" />
           <Text style={styles.optionText}>Fish Guide</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => {navigation.navigate('Fishbot')}}>
-          <Icon name="time-outline" size={24} color="#000" />
+
+        <TouchableOpacity style={styles.option} onPress={() => { navigation.navigate('Fishbot'); }}>
+          <Icon name="help-circle-outline" size={24} color="#000" />
           <Text style={styles.optionText}>Help Center</Text>
           <Icon name="chevron-forward-outline" size={24} color="#000" />
         </TouchableOpacity>

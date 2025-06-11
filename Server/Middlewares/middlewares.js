@@ -6,7 +6,6 @@ dotenv.config(); // Load environment variables
 export const secretKey = process.env.SECRET_KEY;
 
 export const verifyToken = (req, res, next) => {
-    console.log("verify")
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
